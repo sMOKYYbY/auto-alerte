@@ -2,7 +2,7 @@ name: Scan annonces
 
 on:
   schedule:
-    - cron: "*/20 * * * *"   # toutes les 20 min (GitHub peut décaler de quelques minutes)
+    - cron: "7,27,47 * * * *"  # toutes les 20 min, hors minutes de pointe
   workflow_dispatch:          # bouton "Run workflow" pour lancer à la main
   push:                       # relance quand tu modifies le code ou les réglages
     branches: [main]

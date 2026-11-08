@@ -238,6 +238,8 @@ def evaluate(c: dict) -> dict:
     # Prix
     if not price_ht:
         reasons.append("prix inconnu")
+    elif (c.get("price") or 0) < 3000:
+        reasons.append("prix anormal (pièces/jantes ?)")
     elif price_ht > CONFIG["max_price_ht"]:
         reasons.append(f"{price_ht:,} € HT".replace(",", "."))
 
