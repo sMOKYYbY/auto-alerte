@@ -263,8 +263,13 @@ def evaluate(c: dict) -> dict:
     if m["interior_yes"].search(blob):
         checks["interieur"] = "confirmé"
     elif m["trim"].search(blob):
-        checks["interieur"] = "extérieur seul ?" if m["interior_ext_only"].search(blob) else "probable"
-        warn.append("intérieur à confirmer")
+        if m["interior_ext_only"].search(blob):
+            checks["interieur"] = "extérieur seul ?"
+            warn.append("intérieur à confirmer")
+        else:
+            checks["interieur"] = "probable"
+            if not CONFIG.get("interior_probable_ok"):
+                warn.append("intérieur à confirmer")
     else:
         checks["interieur"] = "non"
         reasons.append("pas R-Line/S line")
@@ -672,7 +677,7 @@ def main():
     state = load(DATA / "state.json", {})
     db = load(DATA / "db.json", {})
     first_run = not state.get("bootstrapped")
-    RULES_VERSION = 2
+    RULES_VERSION = 3
     if state.get("rules_version") != RULES_VERSION:
         for c in db.values():
             if c.get("status") in ("match", "a_verifier") or not c.get("detail_done"):

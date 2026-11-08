@@ -130,3 +130,15 @@ def test_btw_marge_field_and_private_seller():
     priv = scan.evaluate(base(model="golf", title="Golf 1.5 TSI 3x R-Line DSG pano", seller_type="particulier",
                               text="BTW verrekenbaar"))
     assert priv["status"] == "rejete" and priv["checks"]["tva"] == "particulier"
+
+
+def test_interior_probable_ok_setting():
+    old = scan.CONFIG.get("interior_probable_ok")
+    try:
+        scan.CONFIG["interior_probable_ok"] = True
+        c = scan.evaluate(base(model="golf", title="Golf 1.5 TSI R-Line DSG pano", text="BTW verrekenbaar"))
+        assert c["checks"]["interieur"] == "probable" and c["status"] == "match"
+        c = scan.evaluate(base(model="golf", title="Golf 1.5 TSI R-Line DSG pano", text="R-Line exterieur, BTW verrekenbaar"))
+        assert c["status"] == "a_verifier"
+    finally:
+        scan.CONFIG["interior_probable_ok"] = old

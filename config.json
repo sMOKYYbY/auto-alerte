@@ -6,6 +6,7 @@
   "year_min": 2017,
   "year_max": 2020,
   "include_variant": true,
+  "interior_probable_ok": true,
   "notify_statuses": ["match", "a_verifier"],
   "notify_price_drops": true,
   "pages_quick_scan": 3,
