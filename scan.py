@@ -125,6 +125,7 @@ VAT_YES = RX(r"btw[^\n.]{0,40}verrekenbaar|verrekenbaar[^\n.]{0,20}btw|btw[\s-]*
              r"vat\s*deductible|tva\s*r[ée]cup[ée]rable")
 VAT_NO = RX(r"btw\s*/\s*marge\s*:?\s*marge|\bmargeauto\b|marge\s*auto|btw\s*niet\s*(?:verrekenbaar|aftrekbaar)|"
             r"niet\s*btw[\s-]*verrekenbaar|\(marge\)|prijs\s*is\s*marge|marge[\s-]*regeling")
+VAT_FIELD = RX(r"btw\s*/\s*marge\s*:?\s*([^\n]{1,60})")
 EXCL_PRICE = [
     RX(r"(?:prijs\s*)?excl\.?\s*btw\s*[:\-]?\s*€?\s*([\d.]{4,7})"),
     RX(r"€\s*([\d.]{4,7}),?-?\s*(?:excl\.?|ex\.?)\s*btw"),
@@ -268,7 +269,18 @@ def evaluate(c: dict) -> dict:
 
     # TVA
     vat_flag = c.get("vat_flag")  # bool structuré de la source, sinon None
-    if vat_flag is True or (vat_flag is None and VAT_YES.search(blob) and not VAT_NO.search(blob)):
+    if vat_flag is None:
+        fm = VAT_FIELD.search(blob)
+        if fm:
+            val = fm.group(1).lower()
+            if re.search(r"niet|marge", val):
+                vat_flag = False
+            elif re.search(r"btw|verrekenbaar|aftrekbaar|ja\b", val):
+                vat_flag = True
+    if c.get("seller_type") == "particulier":
+        checks["tva"] = "particulier"
+        reasons.append("vendeur particulier (pas de TVA)")
+    elif vat_flag is True or (vat_flag is None and VAT_YES.search(blob) and not VAT_NO.search(blob)):
         checks["tva"] = "récupérable"
     elif vat_flag is False or VAT_NO.search(blob):
         checks["tva"] = "marge"
@@ -380,11 +392,14 @@ def mp_detail(c):
                      "Accept": "application/json"})
     if r is not None and r.status_code == 200:
         try:
-            core = r.json().get("adCore") or {}
+            j = r.json()
+            core = j.get("adCore") or {}
             parts = [strip_html(str(core.get("description") or ""))]
             for grp in core.get("carAttributes") or []:
                 parts.append(json.dumps(grp, ensure_ascii=False))
             parts.append(json.dumps(core.get("attributes") or [], ensure_ascii=False))
+            stype = str((j.get("sellerInformation") or {}).get("type") or "").upper()
+            c["seller_type"] = "pro" if stype == "TRADER" else ("particulier" if stype else None)
             return "\n".join(parts)
         except ValueError:
             pass
@@ -506,6 +521,9 @@ def as_detail(c):
     flags = [v for v in values_for_keys(det, ["taxDeductible", "vatDeductible", "isVatDeductible"])
              if isinstance(v, bool)]
     vat_flag = True if True in flags else (False if flags else None)
+    seller = det.get("seller") or {}
+    if isinstance(seller.get("isDealer"), bool):
+        c["seller_type"] = "pro" if seller["isDealer"] else "particulier"
     return "\n".join(parts), vat_flag
 
 
@@ -652,6 +670,13 @@ def main():
     state = load(DATA / "state.json", {})
     db = load(DATA / "db.json", {})
     first_run = not state.get("bootstrapped")
+    RULES_VERSION = 2
+    if state.get("rules_version") != RULES_VERSION:
+        for c in db.values():
+            if c.get("status") in ("match", "a_verifier") or not c.get("detail_done"):
+                c["detail_done"] = False
+                c["needs_eval"] = True
+        state["rules_version"] = RULES_VERSION
 
     last_full = state.get("last_full_sweep")
     hours_since = (NOW - datetime.fromisoformat(last_full)).total_seconds() / 3600 if last_full else 1e9
@@ -705,12 +730,16 @@ def main():
             continue
         evaluate(c)
         hard = [r for r in c["reasons"] if r.startswith(("année", "autre version", "Variant", "modèle"))
-                or "km" in r or "€ HT" in r]
+                or "km" in r or "€ HT" in r or (r == "pas automatique" and c.get("transmission"))]
         if not c["detail_done"] and not hard:
             queue.append(c)
         else:
             c["needs_eval"] = False
-    queue.sort(key=lambda c: c.get("first_seen", ""), reverse=True)
+    def promise(c):
+        t = (c.get("title", "") + " " + c.get("text", "")[:400]).lower()
+        m = MODELS.get(c.get("model")) or MODELS["golf"]
+        return (bool(m["trim"].search(t)) + bool(ROOF.search(t)), c.get("first_seen", ""))
+    queue.sort(key=promise, reverse=True)
     log(f"Détails à lire : {len(queue)} (budget {budget} ce run)")
     for c in queue[:budget]:
         try:

@@ -118,3 +118,15 @@ def test_as_parse_and_next_data():
     assert c["url"] == "https://www.autoscout24.nl/aanbod/volkswagen-golf-abc-123"
     c = scan.evaluate(c)
     assert c["checks"]["auto"] == "oui" and c["checks"]["toit"] == "oui"
+
+
+def test_btw_marge_field_and_private_seller():
+    marge = scan.evaluate(base(model="golf", title="Golf 1.5 TSI 3x R-Line DSG pano",
+                               text="Financiële informatie BTW/marge:  BTW niet verrekenbaar voor ondernemers (marge)"))
+    assert marge["checks"]["tva"] == "marge" and marge["status"] == "rejete"
+    btw = scan.evaluate(base(model="golf", title="Golf 1.5 TSI 3x R-Line DSG pano",
+                             text="BTW/Marge : BTW verrekenbaar voor ondernemers"))
+    assert btw["checks"]["tva"] == "récupérable" and btw["status"] == "match"
+    priv = scan.evaluate(base(model="golf", title="Golf 1.5 TSI 3x R-Line DSG pano", seller_type="particulier",
+                              text="BTW verrekenbaar"))
+    assert priv["status"] == "rejete" and priv["checks"]["tva"] == "particulier"
