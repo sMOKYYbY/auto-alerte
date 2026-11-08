@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "*/20 * * * *"   # toutes les 20 min (GitHub peut décaler de quelques minutes)
   workflow_dispatch:          # bouton "Run workflow" pour lancer à la main
+  push:                       # relance quand tu modifies le code ou les réglages
+    branches: [main]
+    paths: ["scan.py", "config.json", ".github/workflows/scan.yml"]
 
 permissions:
   contents: write
