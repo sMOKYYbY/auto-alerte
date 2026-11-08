@@ -1,0 +1,16 @@
+{
+  "_aide": "Modifie les valeurs ci-dessous puis commit : le prochain scan les applique.",
+  "max_price_ht": 17000,
+  "vat_rate": 0.21,
+  "max_km": 160000,
+  "year_min": 2017,
+  "year_max": 2020,
+  "include_variant": true,
+  "notify_statuses": ["match", "a_verifier"],
+  "notify_price_drops": true,
+  "pages_quick_scan": 3,
+  "full_sweep_every_hours": 6,
+  "max_details_per_run": 120,
+  "request_delay_sec": [1.5, 3.5],
+  "dashboard_url": "https://smokyyby.github.io/auto-alerte/"
+}
