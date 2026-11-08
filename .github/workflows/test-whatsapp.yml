@@ -1,0 +1,30 @@
+name: Test WhatsApp
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/test-whatsapp.yml"]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - name: Envoi test
+        env:
+          GREENAPI_URL: ${{ secrets.GREENAPI_URL }}
+          GREENAPI_ID: ${{ secrets.GREENAPI_ID }}
+          GREENAPI_TOKEN: ${{ secrets.GREENAPI_TOKEN }}
+          WHATSAPP_TO: ${{ secrets.WHATSAPP_TO }}
+          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -c "
+          import os, scan
+          print('secrets présents:', {k: bool(os.environ.get(k)) for k in ['GREENAPI_URL','GREENAPI_ID','GREENAPI_TOKEN','WHATSAPP_TO']})
+          ok = scan.whatsapp('✅ Test : ton alerte Golf/A3 est bien reliée à WhatsApp. La base se remplit, le récapitulatif arrive bientôt.')
+          raise SystemExit(0 if ok else 1)
+          "
