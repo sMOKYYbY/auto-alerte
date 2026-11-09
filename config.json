@@ -1,6 +1,6 @@
 {
   "_aide": "Modifie les valeurs ci-dessous puis commit : le prochain scan les applique.",
-  "max_price_ht": 17000,
+  "max_price_ht": 19000,
   "max_price_ht_by_model": {
     "gti": 22000
   },

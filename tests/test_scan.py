@@ -70,7 +70,7 @@ def test_r_line_word_variants_not_excluded():
 def test_limits():
     assert scan.evaluate(base(model="golf", km=170000, title="Golf R-Line DSG pano",
                               text="R-Line interieur BTW verrekenbaar"))["status"] == "rejete"
-    assert scan.evaluate(base(model="golf", price=21500, title="Golf R-Line DSG pano",
+    assert scan.evaluate(base(model="golf", price=24000, title="Golf R-Line DSG pano",
                               text="R-Line interieur BTW verrekenbaar"))["status"] == "rejete"
     assert scan.evaluate(base(model="golf", year=2016, title="Golf R-Line DSG pano",
                               text="R-Line interieur BTW verrekenbaar"))["status"] == "rejete"
