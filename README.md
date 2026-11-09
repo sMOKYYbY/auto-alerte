@@ -3,8 +3,8 @@
 Surveille **Marktplaats.nl** et **AutoScout24.nl** toutes les 20 minutes, garde une base complète
 des annonces et t'envoie un **WhatsApp** à chaque nouvelle annonce qui colle à tes critères.
 
-**Critères (modifiables dans `config.json`)**
-- VW Golf 7.5 R-Line ou Audi A3 8V2 S line, 2017–2020
+**Critères (modifiables dans `config.json`)** — GTI : budget propre dans `max_price_ht_by_model`
+- VW Golf 7.5 R-Line, Golf 7.5 GTI ou Audi A3 8V2 S line, 2017–2020
 - Boîte automatique (DSG / S tronic)
 - Toit ouvrant / panoramique
 - Intérieur R-Line / S line (« confirmé » si l'annonce le dit clairement, sinon « à vérifier »)

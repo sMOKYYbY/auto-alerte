@@ -142,3 +142,18 @@ def test_interior_probable_ok_setting():
         assert c["status"] == "a_verifier"
     finally:
         scan.CONFIG["interior_probable_ok"] = old
+
+
+def test_gti_detection_and_budget():
+    c = scan.evaluate(base(model="golf", title="Volkswagen Golf 2.0 TSI GTI Performance DSG Pano", price=25000,
+                           text="BTW/marge: BTW verrekenbaar voor ondernemers"))
+    assert c["model"] == "gti" and c["checks"]["interieur"] == "confirmé"
+    assert c["status"] == "match", c          # 25 000 TTC = 20 661 HT, sous le budget GTI de 22 000
+    assert scan.evaluate(base(model="golf", title="Volkswagen Golf 2.0 TSI GTI DSG Pano", price=28000,
+                              text="BTW verrekenbaar"))["status"] == "rejete"
+    # une R-Line au même prix reste refusée (budget 17 000 HT)
+    assert scan.evaluate(base(model="golf", title="Volkswagen Golf 1.5 TSI 3x R-Line DSG Pano", price=25000,
+                              text="BTW verrekenbaar"))["status"] == "rejete"
+    for t in ["Volkswagen Golf GTD DSG pano", "Volkswagen Golf GTE pano", "Volkswagen Golf 8 GTI DSG pano"]:
+        assert scan.evaluate(base(model="golf", title=t, price=20000, text="BTW verrekenbaar"))["status"] == "rejete", t
+    assert scan.search_budget_incl() == int(22000 * 1.21 * 1.02)

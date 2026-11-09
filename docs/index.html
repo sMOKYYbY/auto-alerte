@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Alerte Golf · A3</title>
+<title>Alerte Golf · GTI · A3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -59,7 +59,7 @@ footer a{color:var(--accent)}
 </head>
 <body>
 <header>
-  <h1>Golf 7.5 R-Line · A3 8V2 S line</h1>
+  <h1>Golf 7.5 R-Line · GTI · A3 8V2 S line</h1>
   <div class="sub" id="sub">Chargement…</div>
   <div class="stats" id="stats"></div>
 </header>
@@ -68,7 +68,7 @@ footer a{color:var(--accent)}
     <button data-v="ok" class="on">Bonnes</button><button data-v="match">OK seulement</button><button data-v="all">Tout</button>
   </div>
   <div class="seg" id="fModel">
-    <button data-v="" class="on">Les 2</button><button data-v="golf">Golf</button><button data-v="a3">A3</button>
+    <button data-v="" class="on">Toutes</button><button data-v="golf">R-Line</button><button data-v="gti">GTI</button><button data-v="a3">A3</button>
   </div>
   <select id="sort">
     <option value="price">Prix HT ↑</option><option value="deal">Meilleure affaire</option>
@@ -119,7 +119,7 @@ fetch('listings.json?'+Date.now()).then(r=>r.json()).then(j=>{
   DATA=j.listings||[];
   const live=DATA.filter(c=>!c.gone);
   const n=s=>live.filter(c=>c.status===s).length;
-  $('#sub').textContent='Mis à jour '+new Date(j.updated).toLocaleString('fr-BE')+' · ≤ '+eur(j.config.max_price_ht)+' HT · ≤ '+(j.config.max_km/1000)+'k km · '+j.config.year_min+'–'+j.config.year_max;
+  $('#sub').textContent='Mis à jour '+new Date(j.updated).toLocaleString('fr-BE')+' · ≤ '+eur(j.config.max_price_ht)+' HT'+Object.entries(j.config.max_price_ht_by_model||{}).map(([m,v])=>' ('+m.toUpperCase()+' ≤ '+eur(v)+')').join('')+' · ≤ '+(j.config.max_km/1000)+'k km · '+j.config.year_min+'–'+j.config.year_max;
   const src=Object.entries(j.sources||{}).map(([k,v])=>`<div class="stat"><b>${v.ok?'●':'○'} ${v.last_count??0}</b><span>${k}${v.ok?'':' (bloqué ?)'}</span></div>`).join('');
   $('#stats').innerHTML=`<div class="stat"><b>${n('match')}</b><span>OK</span></div><div class="stat"><b>${n('a_verifier')}</b><span>À vérifier</span></div><div class="stat"><b>${live.length}</b><span>Analysées</span></div>`+src;
   render();

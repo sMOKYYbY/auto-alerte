@@ -133,6 +133,19 @@ EXCL_PRICE = [
 ]
 
 MODELS = {
+    "gti": {
+        "label": "VW Golf 7.5 GTI",
+        "is_model": RX(r"\bgolf\b.*\bgti\b|\bgti\b.*\bgolf\b"),
+        "exclude": RX(r"\bgtd\b|\bgte\b|golf\s*8\b|golf\s*viii|\bmk\s*8\b|variant|sportsvan"),
+        "variant": RX(r"$^"),
+        "trim": RX(r"\bgti\b"),
+        # l'intérieur GTI (sièges sport, volant GTI) est de série sur toutes les GTI
+        "interior_yes": RX(r"\bgti\b"),
+        "interior_ext_only": RX(r"$^"),
+        "gen_sure": RX(r"\b7\.5\b|\bvii\.?5\b|\b245\s*(?:pk|ch|hp)?\b|performance|\btcr\b|active\s*info\s*display|"
+                       r"digital(?:e)?\s*cockpit|virtual|discover\s*pro|composition\s*media"),
+        "gen_wrong": RX(r"golf\s*8\b|golf\s*viii|\bmk\s*8\b"),
+    },
     "golf": {
         "label": "VW Golf 7.5 R-Line",
         "is_model": RX(r"\bgolf\b"),
@@ -173,6 +186,16 @@ MODELS = {
 }
 
 
+def model_budget(model):
+    return (CONFIG.get("max_price_ht_by_model") or {}).get(model, CONFIG["max_price_ht"])
+
+
+def search_budget_incl():
+    """Plafond TTC envoyé aux sites : le plus haut budget, TVA comprise, + 2 % de marge."""
+    top = max([CONFIG["max_price_ht"]] + list((CONFIG.get("max_price_ht_by_model") or {}).values()))
+    return int(top * (1 + CONFIG["vat_rate"]) * 1.02)
+
+
 def detect_model(title: str):
     t = title.lower()
     for key, m in MODELS.items():
@@ -185,6 +208,8 @@ def evaluate(c: dict) -> dict:
     """Ajoute à c : checks, status ('match' | 'a_verifier' | 'rejete'), reasons, price_ht."""
     title = c.get("title", "")
     model = c.get("model") or detect_model(title)
+    if model == "golf" and MODELS["gti"]["is_model"].search(title):
+        model = "gti"
     if model and not MODELS[model]["is_model"].search(title):
         model = None
     c["model"] = model or c.get("model")
@@ -240,7 +265,7 @@ def evaluate(c: dict) -> dict:
         reasons.append("prix inconnu")
     elif (c.get("price") or 0) < 3000:
         reasons.append("prix anormal (pièces/jantes ?)")
-    elif price_ht > CONFIG["max_price_ht"]:
+    elif price_ht > model_budget(model):
         reasons.append(f"{price_ht:,} € HT".replace(",", "."))
 
     # Boîte auto
@@ -317,7 +342,7 @@ MP_QUERIES = [("golf", "golf", 157), ("a3", "a3", 93)]  # (modèle, requête, l2
 
 
 def mp_params(query, l2, offset, limit=100):
-    max_incl = int(CONFIG["max_price_ht"] * (1 + CONFIG["vat_rate"]) * 1.02)
+    max_incl = search_budget_incl()
     return [
         ("query", query), ("limit", str(limit)), ("offset", str(offset)),
         ("searchInTitleAndDescription", "true"), ("viewOptions", "list-view"),
@@ -427,7 +452,7 @@ NEXT_RX = re.compile(r'<script[^>]+id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.S
 
 
 def as_params(page):
-    max_incl = int(CONFIG["max_price_ht"] * (1 + CONFIG["vat_rate"]) * 1.02)
+    max_incl = search_budget_incl()
     return {"atype": "C", "cy": "NL", "ustate": "N,U", "damaged_listing": "exclude",
             "fregfrom": CONFIG["year_min"], "fregto": CONFIG["year_max"],
             "kmto": CONFIG["max_km"], "priceto": max_incl, "gear": "A",
@@ -677,8 +702,9 @@ def main():
     state = load(DATA / "state.json", {})
     db = load(DATA / "db.json", {})
     first_run = not state.get("bootstrapped")
-    RULES_VERSION = 3
+    RULES_VERSION = 4
     if state.get("rules_version") != RULES_VERSION:
+        state.pop("last_full_sweep", None)
         for c in db.values():
             if c.get("status") in ("match", "a_verifier") or not c.get("detail_done"):
                 c["detail_done"] = False
