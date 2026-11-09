@@ -168,7 +168,7 @@ MODELS = {
     "a3": {
         "label": "Audi A3 8V2 S line",
         "is_model": RX(r"\ba3\b"),
-        "exclude": RX(r"\bs3\b|\brs\s?3\b|cabrio|\b8y\b|\be[\s-]?tron\s*40\b|\b40\s*tfsi\s*e\b|\b45\s*tfsi\s*e\b"),
+        "exclude": RX(r"\bs3\b|\brs\s?3\b|cabrio|\b8y\b|edition\s*one|advanced\s*edition|\be[\s-]?tron\s*40\b|\b40\s*tfsi\s*e\b|\b45\s*tfsi\s*e\b"),
         "variant": RX(r"$^"),
         "trim": RX(r"s[\s-]?line|pro\s*line\s*s\b|sport\s*s\b"),
         "interior_yes": RX(
@@ -179,8 +179,9 @@ MODELS = {
             r"sportstoelen\s*(?:\"|')?s[\s-]?line|s[\s-]?line[\s-]*(?:sport)?(?:stoelen|zetels|kuipstoelen|bekleding|seats)|"
             r"stoelbekleding[^\n]{0,20}s[\s-]?line|s[\s-]?line\s*(?:alcantara|leder|leer)"),
         "interior_ext_only": RX(r"s[\s-]?line\s*(?:exterieur|exterior|ext\.|buiten|styling|look)"),
-        "gen_sure": RX(r"\b8v\b|\b8v2\b|facelift|virtual\s*cockpit|\b35\s*tfsi\b|\b30\s*tfsi\b|1\.5\s*tfsi|1\.0\s*tfsi|"
-                       r"\b30\s*tdi\b|\b35\s*tdi\b"),
+        # 30/35 TFSI existent aussi sur la 8Y : en 2020 on demande une preuve plus forte
+        "gen_sure": RX(r"\b8v\b|\b8v2\b|advance\s*sport|\be[\s-]?tron\b(?!\s*\d{2}\s*tfsi)|\bcod\b|1\.5\s*tfsi|1\.0\s*tfsi|1\.4\s*tfsi|"
+                       r"pro\s*line|design\s*pro\s*line|sport\s*pro\s*line"),
         "gen_wrong": RX(r"\b8y\b"),
     },
 }
@@ -702,7 +703,7 @@ def main():
     state = load(DATA / "state.json", {})
     db = load(DATA / "db.json", {})
     first_run = not state.get("bootstrapped")
-    RULES_VERSION = 5
+    RULES_VERSION = 6
     if state.get("rules_version") != RULES_VERSION:
         state.pop("last_full_sweep", None)
         for c in db.values():

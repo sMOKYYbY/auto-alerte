@@ -157,3 +157,15 @@ def test_gti_detection_and_budget():
     for t in ["Volkswagen Golf GTD DSG pano", "Volkswagen Golf GTE pano", "Volkswagen Golf 8 GTI DSG pano"]:
         assert scan.evaluate(base(model="golf", title=t, price=20000, text="BTW verrekenbaar"))["status"] == "rejete", t
     assert scan.search_budget_incl() == int(22000 * 1.21 * 1.02)
+
+
+def test_a3_8y_excluded_or_flagged():
+    c = scan.evaluate(base(model="a3", year=2020, title="Audi A3 Sportback 35 TFSI Edition One S-Line Panoramadak",
+                           text="S tronic, BTW verrekenbaar"))
+    assert c["status"] == "rejete"
+    c = scan.evaluate(base(model="a3", year=2020, title="Audi A3 Sportback 35 TFSI S line S tronic pano",
+                           text="BTW verrekenbaar, S line interieur"))
+    assert c["status"] == "a_verifier" and "vérifier génération (restylée ?)" in c["warnings"]
+    c = scan.evaluate(base(model="a3", year=2020, title="Audi A3 Limousine 35 TFSI CoD Advance Sport 3x S-line pano S tronic",
+                           text="BTW verrekenbaar"))
+    assert c["status"] == "match"
