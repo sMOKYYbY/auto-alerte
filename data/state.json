@@ -3,13 +3,13 @@
   "Marktplaats": {
    "fails": 0,
    "last_count": 1331,
-   "last_run": "2026-11-11T15:37:49+00:00",
+   "last_run": "2026-11-11T16:04:58+00:00",
    "ok": true
   },
   "AutoScout24": {
    "fails": 0,
    "last_count": 713,
-   "last_run": "2026-11-11T15:37:49+00:00",
+   "last_run": "2026-11-11T16:04:58+00:00",
    "ok": true
   }
  },
@@ -41,8 +41,8 @@
   "mp:m2463734002",
   "mp:m2464488516"
  ],
- "last_run": "2026-11-11T15:37:49+00:00",
- "rules_version": 6,
+ "last_run": "2026-11-11T16:04:58+00:00",
+ "rules_version": 7,
  "bootstrapped": true,
- "last_full_sweep": "2026-11-11T15:37:49+00:00"
+ "last_full_sweep": "2026-11-11T16:04:58+00:00"
 }
