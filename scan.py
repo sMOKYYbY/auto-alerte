@@ -703,11 +703,11 @@ def main():
     state = load(DATA / "state.json", {})
     db = load(DATA / "db.json", {})
     first_run = not state.get("bootstrapped")
-    RULES_VERSION = 6
+    RULES_VERSION = 7
     if state.get("rules_version") != RULES_VERSION:
         state.pop("last_full_sweep", None)
         for c in db.values():
-            if c.get("status") in ("match", "a_verifier") or not c.get("detail_done"):
+            if c.get("status") in ("match", "a_verifier") or not c.get("detail_done") or not c.get("text"):
                 c["detail_done"] = False
                 c["needs_eval"] = True
         state["rules_version"] = RULES_VERSION
@@ -762,6 +762,9 @@ def main():
     for c in db.values():
         if c.get("gone") or not c.get("needs_eval"):
             continue
+        # texte de la fiche effacé pour gagner de la place : on la relit avant de réévaluer
+        if c.get("detail_done") and not c.get("text"):
+            c["detail_done"] = False
         evaluate(c)
         hard = [r for r in c["reasons"] if r.startswith(("année", "autre version", "Variant", "modèle"))
                 or "km" in r or "€ HT" in r or (r == "pas automatique" and c.get("transmission"))]

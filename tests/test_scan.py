@@ -169,3 +169,28 @@ def test_a3_8y_excluded_or_flagged():
     c = scan.evaluate(base(model="a3", year=2020, title="Audi A3 Limousine 35 TFSI CoD Advance Sport 3x S-line pano S tronic",
                            text="BTW verrekenbaar"))
     assert c["status"] == "match"
+
+
+def test_wiped_text_is_reread_before_reevaluation(tmp_path, monkeypatch):
+    """Une annonce écartée (texte effacé) dont le prix change doit être relue, pas réévaluée à vide."""
+    import json as _j
+    monkeypatch.setattr(scan, "DATA", tmp_path / "data")
+    monkeypatch.setattr(scan, "DOCS", tmp_path / "docs")
+    monkeypatch.setattr(scan, "pause", lambda: None)
+    monkeypatch.setattr(scan, "whatsapp", lambda *a, **k: True)
+    (tmp_path / "data").mkdir()
+    old = {"uid": "mp:m1", "source": "Marktplaats", "id": "m1", "model": "a3", "url": "https://x",
+           "title": "Audi A3 Sportback 35 TFSI S-Line S tronic panoramadak", "price": 19500, "km": 150000,
+           "year": 2019, "transmission": "Automaat", "text": "", "detail_done": True, "needs_eval": False,
+           "status": "rejete", "reasons": ["TVA non récupérable (marge)"], "checks": {}, "first_seen": "2026-11-08"}
+    (tmp_path / "data" / "db.json").write_text(_j.dumps({"mp:m1": old}))
+    (tmp_path / "data" / "state.json").write_text(_j.dumps({"bootstrapped": True, "rules_version": 7,
+                                                             "last_full_sweep": scan.NOW_ISO}))
+    new = dict(old, price=18850, text="")
+    monkeypatch.setattr(scan, "mp_search", lambda pages: ([new], True))
+    monkeypatch.setattr(scan, "as_search", lambda pages: ([], True))
+    monkeypatch.setattr(scan, "mp_detail", lambda c: "BTW/Marge: Marge, de BTW is niet aftrekbaar. S Line interieur")
+    monkeypatch.setattr(scan.sys, "argv", ["scan.py"])
+    scan.main()
+    c = _j.loads((tmp_path / "data" / "db.json").read_text())["mp:m1"]
+    assert c["checks"]["tva"] == "marge" and c["status"] == "rejete"
