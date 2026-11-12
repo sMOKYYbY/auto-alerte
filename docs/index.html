@@ -76,7 +76,7 @@ footer a{color:var(--accent)}
   </select>
 </div></div>
 <main id="list"></main>
-<footer>Sources : Marktplaats.nl, AutoScout24.nl · <a href="listings.csv">Télécharger en CSV (Excel)</a><br>
+<footer>Sources : Marktplaats.nl, AutoScout24.nl, 2dehands.be, AutoScout24.be · <a href="listings.csv">Télécharger en CSV (Excel)</a><br>
 Coût = prix HT si la TVA est récupérable (⭐), sinon prix affiché (marge ou particulier). Toujours confirmer la TVA et le prix export (hors rest-BPM) avec le vendeur.</footer>
 <script>
 const $ = s => document.querySelector(s);
@@ -108,7 +108,7 @@ function render(){
         <div class="price"><b>${eur(ck.tva==='récupérable'?(c.cost??c.price_ht):c.price)}</b><small>${ck.tva==='récupérable'?'HT ⭐ · '+eur(c.price)+' TTC':(ck.tva==='marge'||ck.tva==='particulier'?'prix final ('+esc(ck.tva)+')':'TTC · TVA ?')}</small>
           ${d!=null?`<span class="deal ${d<0?'good':'bad'}">${d>0?'+':''}${d}% vs comparables</span>`:''}
           ${c.prev_price&&c.price<c.prev_price?`<span class="deal good">📉 était ${eur(c.prev_price)}</span>`:''}</div>
-        <div class="meta">${[c.first_reg||c.year||'?', c.km?c.km.toLocaleString('fr-BE')+' km':'? km', esc(c.city), c.source+(c.also_on&&c.also_on.length?' (+'+c.also_on.join(', ')+')':'')].filter(Boolean).join(' · ')}</div>
+        <div class="meta">${[c.first_reg||c.year||'?', c.km?c.km.toLocaleString('fr-BE')+' km':'? km', ({BE:'🇧🇪 ',NL:'🇳🇱 '}[c.country||'NL']||'')+esc(c.city), c.source+(c.also_on&&c.also_on.length?' (+'+c.also_on.join(', ')+')':'')].filter(Boolean).join(' · ')}</div>
         <div class="chips">${chip('Auto',esc(ck.auto))}${chip('Toit',ck.toit)}${chip('TVA',ck.tva)}</div>
         ${c.warnings&&c.warnings.length?`<div class="note">⚠️ ${esc(c.warnings.join(' · '))}</div>`:''}
         ${c.status==='rejete'&&c.reasons?`<div class="why">✗ ${esc(c.reasons.join(' · '))}</div>`:''}

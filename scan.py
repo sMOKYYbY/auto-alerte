@@ -119,25 +119,27 @@ def strip_html(s: str) -> str:
 # --------------------------------------------------------------------------
 RX = lambda p: re.compile(p, re.I)
 
-ROOF = RX(r"panorama(?![\s-]*(?:camera|view|beeld|monitor))|\bpano\b|panodak|schuif[\s/-]*(?:kantel)?[\s-]*dak|schuifdak|kanteldak|"
+ROOF = RX(r"toit\s*(?:ouvrant|panoramique|pano|vitr[ée]|coulissant)|open\s*roof|panorama(?![\s-]*(?:camera|view|beeld|monitor))|\bpano\b|panodak|schuif[\s/-]*(?:kantel)?[\s-]*dak|schuifdak|kanteldak|"
           r"open\s*dak|glazen\s*(?:schuif)?dak|zonnedak|sunroof|toit ouvrant|schiebedach")
 AUTO = RX(r"\bdsg\b|s[\s-]?tronic|\bautomaat\b|\bautomatic\b|\bautomatique\b|tiptronic|\baut\b")
 AUTO_FIELD = RX(r"autom|dsg|tronic")
 MANUAL = RX(r"handgeschakeld|\bhandbak\b|manual|manuel")
 
-VAT_YES = RX(r"btw[^\n.]{0,40}verrekenbaar|verrekenbaar[^\n.]{0,20}btw|btw[\s-]*auto\b|"
+VAT_YES = RX(r"tva\s*(?:d[ée]ductible|r[ée]cup[ée]rable)|\bhtva\b|hors\s*tva|excl\.?\s*tva|btw[^\n.]{0,40}verrekenbaar|verrekenbaar[^\n.]{0,20}btw|btw[\s-]*auto\b|"
              r"excl\.?\s*btw|ex\.?\s*btw|btw\s*/\s*marge\s*:?\s*btw\b|btw\s*:\s*verrekenbaar|"
              r"vat\s*deductible|tva\s*r[ée]cup[ée]rable")
-VAT_NO = RX(r"btw\s*/\s*marge\s*:?\s*marge|\bmargeauto\b|marge\s*auto|btw\s*niet\s*(?:verrekenbaar|aftrekbaar)|"
+VAT_NO = RX(r"r[ée]gime\s*de\s*(?:la\s*)?marge|tva\s*non\s*(?:d[ée]ductible|r[ée]cup[ée]rable)|btw\s*/\s*marge\s*:?\s*marge|\bmargeauto\b|marge\s*auto|btw\s*niet\s*(?:verrekenbaar|aftrekbaar)|"
             r"niet\s*btw[\s-]*verrekenbaar|\(marge\)|prijs\s*is\s*marge|marge[\s-]*regeling")
 VAT_FIELD = RX(r"btw\s*/\s*marge\s*:?\s*([^\n]{1,60})")
 EXCL_PRICE = [
+    RX(r"€?\s*([\d.]{4,7}),?-?\s*€?\s*(?:htva|hors\s*tva)"),
     RX(r"(?:prijs\s*)?excl\.?\s*btw\s*[:\-]?\s*€?\s*([\d.]{4,7})"),
     RX(r"€\s*([\d.]{4,7}),?-?\s*(?:excl\.?|ex\.?)\s*btw"),
     RX(r"([\d.]{4,7}),?-?\s*(?:euro\s*)?excl\.?\s*btw"),
 ]
 
-DAMAGE = RX(r"project\s*auto|projectauto|klus\s*auto|klusauto|opknapper|motor\s*schade|motorschade|"
+DAMAGE = RX(r"pour\s*pi[èe]ces|moteur\s*(?:hs|cass[ée])|bo[iî]te\s*(?:hs|cass[ée]|[àa]\s*revoir)|en\s*panne|accident[ée]|"
+            r"ne\s*d[ée]marre\s*pas|pour\s*marchand|pour\s*export|probl[èe]me\s*(?:de\s*)?(?:bo[iî]te|moteur|embrayage)|project\s*auto|projectauto|klus\s*auto|klusauto|opknapper|motor\s*schade|motorschade|"
             r"versnellingsbak\s*(?:defect|kapot)|bak\s*(?:defect|kapot)|\bdefect\b|schade\s*auto|schadeauto|"
             r"start\s*niet|rijdt\s*niet|loopt\s*niet|voor\s*onderdelen|export\s*only|alleen\s*export|"
             r"ketting\s*(?:hoorbaar|rammelt|ratelt)|mechatronic\w*\s*(?:defect|kapot)")
@@ -346,6 +348,12 @@ def evaluate(c: dict) -> dict:
 # --------------------------------------------------------------------------
 # Source 1 : Marktplaats (API JSON du site)
 # --------------------------------------------------------------------------
+MP_SITES = {   # même API (Adevinta) pour les Pays-Bas et la Belgique
+    "Marktplaats": {"host": "www.marktplaats.nl", "app": "app.marktplaats.nl", "link": "link.marktplaats.nl",
+                    "locale": "nl-NL", "prefix": "mp", "country": "NL"},
+    "2dehands": {"host": "www.2dehands.be", "app": "app.2dehands.be", "link": "link.2dehands.be",
+                 "locale": "nl-BE", "prefix": "2d", "country": "BE"},
+}
 MP_SEARCH = "https://www.marktplaats.nl/lrp/api/search"
 MP_VIP = "https://app.marktplaats.nl/app/vip/v4/item/{}"
 MP_QUERIES = [("golf", "golf", 157), ("polo", "polo", 157)]  # (famille, requête, l2CategoryId Volkswagen)
@@ -376,7 +384,8 @@ def mp_attrs(raw):
     return out
 
 
-def mp_parse(raw, model):
+def mp_parse(raw, model, site="Marktplaats"):
+    S = MP_SITES[site]
     item_id = str(raw.get("itemId", ""))
     if not item_id:
         return None
@@ -386,10 +395,11 @@ def mp_parse(raw, model):
     vip = raw.get("vipUrl")
     trans = attrs.get("transmission") or attrs.get("transmissionType") or ""
     return {
-        "uid": f"mp:{item_id}", "source": "Marktplaats", "id": item_id, "model": model, "family": model,
+        "uid": f"{S['prefix']}:{item_id}", "source": site, "country": S["country"], "id": item_id,
+        "model": model, "family": model,
         "fuel": str(attrs.get("fuel") or attrs.get("fuelType") or ""),
         "title": str(raw.get("title", "")),
-        "url": f"https://www.marktplaats.nl{vip}" if vip else f"https://link.marktplaats.nl/{item_id}",
+        "url": f"https://{S['host']}{vip}" if vip else f"https://{S['link']}/{item_id}",
         "price": cents // 100 if cents else None,
         "km": to_int(attrs.get("mileage")),
         "year": to_int(attrs.get("constructionYear")),
@@ -402,28 +412,29 @@ def mp_parse(raw, model):
     }
 
 
-def mp_search(pages):
+def mp_search(pages, site="Marktplaats"):
+    S = MP_SITES[site]
     results, ok = [], True
     for model, query, l2 in MP_QUERIES:
         for page in range(pages):
-            r = get(MP_SEARCH, params=mp_params(query, l2, page * 100, years=family_years(model)),
+            r = get(f"https://{S['host']}/lrp/api/search", params=mp_params(query, l2, page * 100, years=family_years(model)),
                     headers={"Accept": "application/json, text/plain, */*",
-                             "Referer": "https://www.marktplaats.nl/", "Sec-Fetch-Mode": "cors",
+                             "Referer": f"https://{S['host']}/", "Sec-Fetch-Mode": "cors",
                              "Sec-Fetch-Site": "same-origin"})
             if r is None or r.status_code != 200:
-                log(f"  Marktplaats {query} p{page}: HTTP {getattr(r, 'status_code', 'ERR')}")
+                log(f"  {site} {query} p{page}: HTTP {getattr(r, 'status_code', 'ERR')}")
                 ok = False
                 break
             try:
                 data = r.json()
             except ValueError:
-                log("  Marktplaats: réponse non JSON"); ok = False; break
+                log(f"  {site}: réponse non JSON"); ok = False; break
             items = data.get("listings") or []
             for raw in items:
-                p = mp_parse(raw, model)
+                p = mp_parse(raw, model, site)
                 if p:
                     results.append(p)
-            log(f"  Marktplaats {query} p{page}: {len(items)} annonces (total site {data.get('totalResultCount')})")
+            log(f"  {site} {query} p{page}: {len(items)} annonces (total site {data.get('totalResultCount')})")
             if len(items) < 100:
                 break
             pause()
@@ -431,8 +442,9 @@ def mp_search(pages):
 
 
 def mp_detail(c):
-    r = get(MP_VIP.format(c["id"]), method="POST",
-            headers={"ecg-locale": "nl-NL", "Content-Type": "application/json",
+    S = MP_SITES.get(c.get("source"), MP_SITES["Marktplaats"])
+    r = get(f"https://{S['app']}/app/vip/v4/item/{c['id']}", method="POST",
+            headers={"ecg-locale": S["locale"], "Content-Type": "application/json",
                      "Accept": "application/json"})
     if r is not None and r.status_code == 200:
         try:
@@ -458,15 +470,19 @@ def mp_detail(c):
 # --------------------------------------------------------------------------
 # Source 2 : AutoScout24.nl (JSON __NEXT_DATA__ des pages)
 # --------------------------------------------------------------------------
+AS_SITES = {
+    "AutoScout24": {"base": "https://www.autoscout24.nl", "lst": "", "cy": "NL", "prefix": "as", "country": "NL"},
+    "AutoScout24.be": {"base": "https://www.autoscout24.be", "lst": "/nl", "cy": "B", "prefix": "asbe", "country": "BE"},
+}
 AS_BASE = "https://www.autoscout24.nl"
 AS_QUERIES = [("golf", "/lst/volkswagen/golf"), ("polo", "/lst/volkswagen/polo")]
 NEXT_RX = re.compile(r'<script[^>]+id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.S)
 
 
-def as_params(page, years=None):
+def as_params(page, years=None, cy="NL"):
     max_incl = search_budget_incl()
     y0, y1 = years or (CONFIG.get("year_min", 2000), CONFIG.get("year_max", 2030))
-    return {"atype": "C", "cy": "NL", "ustate": "N,U", "damaged_listing": "exclude",
+    return {"atype": "C", "cy": cy, "ustate": "N,U", "damaged_listing": "exclude",
             "fregfrom": y0, "fregto": y1,
             "kmto": CONFIG["max_km"], "priceto": max_incl, "gear": "A",
             "sort": "age", "desc": "1", "page": page}
@@ -492,7 +508,8 @@ def as_listing_nodes(data):
     return max(lists, key=len) if lists else []
 
 
-def as_parse(node, model):
+def as_parse(node, model, site="AutoScout24"):
+    S = AS_SITES[site]
     lid = str(node.get("id") or "")
     if not lid:
         return None
@@ -510,11 +527,12 @@ def as_parse(node, model):
     loc = node.get("location") or {}
     img = (node.get("images") or [None])[0]
     return {
-        "uid": f"as:{lid}", "source": "AutoScout24", "id": lid, "model": model, "family": model,
+        "uid": f"{S['prefix']}:{lid}", "source": site, "country": S["country"], "id": lid,
+        "model": model, "family": model,
         "fuel": " ".join(str(v) for v in values_for_keys(veh, ["fuel", "fuelType", "fuelCategory"])
                          if isinstance(v, (str, dict)))[:80],
         "title": title or str(node.get("title") or ""),
-        "url": url if url.startswith("http") else AS_BASE + url,
+        "url": url if url.startswith("http") else S["base"] + url,
         "price": price, "km": km,
         "year": int(ym.group(0)) if ym else None, "first_reg": fr or None,
         "transmission": str(veh.get("transmission") or ""),
@@ -525,25 +543,27 @@ def as_parse(node, model):
     }
 
 
-def as_search(pages):
+def as_search(pages, site="AutoScout24"):
+    S = AS_SITES[site]
     results, ok = [], True
     for model, path in AS_QUERIES:
         for page in range(1, pages + 1):
-            r = get(AS_BASE + path, params=as_params(page, years=family_years(model)), headers={"Accept": "text/html"})
+            r = get(S["base"] + S["lst"] + path, params=as_params(page, years=family_years(model), cy=S["cy"]),
+                    headers={"Accept": "text/html"})
             if r is None or r.status_code != 200:
-                log(f"  AutoScout24 {model} p{page}: HTTP {getattr(r, 'status_code', 'ERR')}")
+                log(f"  {site} {model} p{page}: HTTP {getattr(r, 'status_code', 'ERR')}")
                 ok = False
                 break
             data = next_data(r.text)
             if not data:
-                log("  AutoScout24: __NEXT_DATA__ introuvable (page bloquée ?)"); ok = False; break
+                log(f"  {site}: __NEXT_DATA__ introuvable (page bloquée ?)"); ok = False; break
             nodes = as_listing_nodes(data)
             for n in nodes:
-                p = as_parse(n, model)
+                p = as_parse(n, model, site)
                 if p:
                     results.append(p)
             total = values_for_keys(data, ["numberOfResults", "totalResults"])
-            log(f"  AutoScout24 {model} p{page}: {len(nodes)} annonces (total site {total[:1]})")
+            log(f"  {site} {model} p{page}: {len(nodes)} annonces (total site {total[:1]})")
             if len(nodes) < 15:
                 break
             pause()
@@ -686,7 +706,8 @@ def notif_text(c, prefix):
     ]
     if c.get("warnings"):
         lines.append("⚠️ " + ", ".join(c["warnings"]))
-    lines.append(f"📍 {c.get('city') or ''} · {c['source']}")
+    flag = {"BE": "🇧🇪", "NL": "🇳🇱"}.get(c.get("country") or "NL", "")
+    lines.append(f"📍 {flag} {c.get('city') or ''} · {c['source']}")
     lines.append(c["url"])
     return "\n".join(lines)
 
@@ -754,9 +775,10 @@ def main():
     log(f"Scan {'COMPLET' if full else 'rapide'} ({pages} pages max par recherche)")
 
     found, src_status = [], state.get("source_status", {})
-    for name, fn in [("Marktplaats", mp_search), ("AutoScout24", as_search)]:
+    sources = [(n, mp_search) for n in MP_SITES] + [(n, as_search) for n in AS_SITES]
+    for name, fn in sources:
         try:
-            res, ok = fn(pages)
+            res, ok = fn(pages, name)
         except Exception as e:  # une source cassée ne doit pas bloquer l'autre
             log(f"  {name} ERREUR:", repr(e)); res, ok = [], False
         st = src_status.setdefault(name, {"fails": 0})
@@ -792,7 +814,12 @@ def main():
         state["last_full_sweep"] = NOW_ISO
 
     # Pré-évaluation sans détail, puis détail pour les candidats plausibles
-    budget = 450 if first_run else CONFIG["max_details_per_run"]
+    # Sources ajoutées après le démarrage : premier remplissage silencieux, puis un récapitulatif
+    all_sources = list(MP_SITES) + list(AS_SITES)
+    if "sources_bootstrapped" not in state:
+        state["sources_bootstrapped"] = ["Marktplaats", "AutoScout24"] if state.get("bootstrapped") else []
+    new_sources = [s for s in all_sources if s not in state["sources_bootstrapped"]] if not first_run else []
+    budget = 450 if (first_run or new_sources) else CONFIG["max_details_per_run"]
     queue = []
     for c in db.values():
         if c.get("gone") or not c.get("needs_eval"):
@@ -815,7 +842,7 @@ def main():
     log(f"Détails à lire : {len(queue)} (budget {budget} ce run)")
     for c in queue[:budget]:
         try:
-            if c["source"] == "Marktplaats":
+            if c["source"] in MP_SITES:
                 txt, flag = mp_detail(c), None
             else:
                 txt, flag = as_detail(c)
@@ -855,13 +882,27 @@ def main():
         group = c.get("dup_group") or [c["uid"]]
         if st in CONFIG["notify_statuses"] and not any(u in notified for u in group):
             notified.add(c["uid"])
-            if not first_run:
+            if not first_run and c.get("source") not in new_sources:
                 prefix = "✅ NOUVELLE ANNONCE" if st == "match" else "🟡 À VÉRIFIER"
                 msgs.append(notif_text(c, prefix))
         elif (CONFIG.get("notify_price_drops") and st in CONFIG["notify_statuses"] and c["uid"] in notified
               and c.get("prev_price") and c["price"] < c["prev_price"] and not c.get("drop_notified") == c["price"]):
             msgs.append(notif_text(c, f"📉 BAISSE DE PRIX ({fmt_eur(c['prev_price'])} → {fmt_eur(c['price'])} € TTC)"))
             c["drop_notified"] = c["price"]
+
+    for src in new_sources:
+        pending = [c for c in db.values() if c.get("source") == src and not c.get("gone")
+                   and not c.get("detail_done") and c.get("needs_eval")]
+        if not pending and src_status.get(src, {}).get("ok"):
+            mine = [c for c in db.values() if c.get("source") == src and not c.get("gone")]
+            n_ok = sum(1 for c in mine if c.get("status") == "match")
+            n_chk = sum(1 for c in mine if c.get("status") == "a_verifier")
+            flag = "🇧🇪 " if any(c.get("country") == "BE" for c in mine) else ""
+            whatsapp(f"{flag}{src} ajouté : {n_ok} annonces OK, {n_chk} à vérifier (sur {len(mine)} analysées).\n"
+                     f"Elles sont dans le tableau ; les nouvelles t'arriveront ici.\n{CONFIG.get('dashboard_url') or ''}", dry)
+            state["sources_bootstrapped"].append(src)
+    if first_run:
+        state["sources_bootstrapped"] = all_sources
 
     if first_run and not bootstrapping:
         n_match = sum(1 for c in db.values() if c.get("status") == "match")

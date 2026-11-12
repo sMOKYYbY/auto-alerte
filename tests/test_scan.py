@@ -139,8 +139,8 @@ def test_new_search_archives_old_base(tmp_path, monkeypatch):
     (tmp_path / "data").mkdir()
     (tmp_path / "data" / "db.json").write_text(json.dumps({"mp:old": {"uid": "mp:old", "model": "a3"}}))
     (tmp_path / "data" / "state.json").write_text(json.dumps({"bootstrapped": True, "notified": ["mp:old"]}))
-    monkeypatch.setattr(scan, "mp_search", lambda pages: ([], True))
-    monkeypatch.setattr(scan, "as_search", lambda pages: ([], True))
+    monkeypatch.setattr(scan, "mp_search", lambda pages, site=None: ([], True))
+    monkeypatch.setattr(scan, "as_search", lambda pages, site=None: ([], True))
     monkeypatch.setattr(scan.sys, "argv", ["scan.py"])
     scan.main()
     db = json.loads((tmp_path / "data" / "db.json").read_text())
@@ -164,8 +164,8 @@ def test_wiped_text_is_reread_before_reevaluation(tmp_path, monkeypatch):
                                                              "search_id": scan.CONFIG["search_id"],
                                                              "last_full_sweep": scan.NOW_ISO}))
     new = dict(old, price=8500, text="")
-    monkeypatch.setattr(scan, "mp_search", lambda pages: ([new], True))
-    monkeypatch.setattr(scan, "as_search", lambda pages: ([], True))
+    monkeypatch.setattr(scan, "mp_search", lambda pages, site=None: ([new] if site in (None, "Marktplaats") else [], True))
+    monkeypatch.setattr(scan, "as_search", lambda pages, site=None: ([], True))
     monkeypatch.setattr(scan, "mp_detail", lambda c: "BTW/Marge: Marge, de BTW is niet aftrekbaar. Benzine")
     monkeypatch.setattr(scan.sys, "argv", ["scan.py"])
     scan.main()
@@ -186,3 +186,61 @@ def test_project_and_tuned_cars_flagged():
     assert "à réparer / projet ?" in c["warnings"]
     c = scan.evaluate(base(title="Volkswagen Golf 2.0 GTI STAGE 2 FULL OPTION 300+ PK DSG pano", year=2010, text="Marge"))
     assert "moteur modifié" in c["warnings"]
+
+
+def test_2dehands_parse_and_french_wording():
+    raw = {"itemId": "m2459721887", "title": "Golf 6 1.4 TSI*Boîte Automatique*Toit ouvrant*Prête à immat",
+           "priceInfo": {"priceCents": 790000}, "vipUrl": "/v/auto-s/volkswagen/m2459721887-golf-6",
+           "location": {"cityName": "Gosselies"},
+           "extendedAttributes": [{"key": "constructionYear", "value": "2010"}, {"key": "mileage", "value": "150000"},
+                                  {"key": "fuel", "value": "Benzine"}]}
+    c = scan.mp_parse(raw, "golf", "2dehands")
+    assert c["uid"] == "2d:m2459721887" and c["country"] == "BE" and c["url"].startswith("https://www.2dehands.be/v/")
+    c["text"] += "\nVoiture vendue sous le régime de la marge."
+    c["detail_done"] = True
+    c = scan.evaluate(c)
+    assert c["model"] == "golf6" and c["checks"]["auto"] == "oui" and c["checks"]["toit"] == "oui"
+    assert c["checks"]["tva"] == "marge" and c["status"] == "match", c
+    htva = scan.evaluate(base(title="VW Golf 1.4 TSI DSG toit panoramique", price=10500,
+                              text="Prix : 8.678 € HTVA, TVA déductible"))
+    assert htva["checks"]["tva"] == "récupérable" and htva["price_ht"] == 8678 and htva["status"] == "match"
+    assert "à réparer / projet ?" in scan.evaluate(base(title="Golf 1.4 TSI DSG toit ouvrant",
+                                                        text="Vendu pour marchand, problème boîte"))["warnings"]
+
+
+def test_autoscout_be_url_host():
+    node = {"id": "x1", "url": "/nl/aanbod/volkswagen-golf-x1", "vehicle": {"make": "Volkswagen", "model": "Golf"},
+            "tracking": {"price": "8999", "mileage": "68496", "firstRegistration": "03-2009"}}
+    c = scan.as_parse(node, "golf", "AutoScout24.be")
+    assert c["url"] == "https://www.autoscout24.be/nl/aanbod/volkswagen-golf-x1" and c["uid"] == "asbe:x1"
+    assert scan.as_params(1, years=(2004, 2013), cy="B")["cy"] == "B"
+
+
+def test_new_source_is_bootstrapped_silently(tmp_path, monkeypatch):
+    monkeypatch.setattr(scan, "DATA", tmp_path / "data")
+    monkeypatch.setattr(scan, "DOCS", tmp_path / "docs")
+    monkeypatch.setattr(scan, "pause", lambda: None)
+    sent = []
+    monkeypatch.setattr(scan, "whatsapp", lambda t, dry=False: sent.append(t) or True)
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "db.json").write_text("{}")
+    (tmp_path / "data" / "state.json").write_text(json.dumps({
+        "bootstrapped": True, "search_id": scan.CONFIG["search_id"], "rules_version": 8,
+        "last_full_sweep": scan.NOW_ISO,
+        "source_status": {"Marktplaats": {"ok": True}, "AutoScout24": {"ok": True}}}))
+
+    def be_item(i):
+        return {"uid": f"2d:m{i}", "source": "2dehands", "country": "BE", "id": f"m{i}", "model": "golf",
+                "family": "golf", "title": "VW Golf 1.4 TSI DSG toit ouvrant", "url": f"https://www.2dehands.be/v/m{i}",
+                "price": 7500, "km": 150000, "year": 2011, "transmission": "Automaat", "fuel": "Benzine", "text": ""}
+    items = [be_item(1), be_item(2)]
+    monkeypatch.setattr(scan, "mp_search", lambda pages, site=None: (items if site == "2dehands" else [], True))
+    monkeypatch.setattr(scan, "as_search", lambda pages, site=None: ([], True))
+    monkeypatch.setattr(scan, "mp_detail", lambda c: "régime de la marge")
+    monkeypatch.setattr(scan.sys, "argv", ["scan.py"])
+    scan.main()
+    assert len(sent) == 1 and "2dehands ajouté : 2 annonces OK" in sent[0]      # récap, pas 2 alertes
+    sent.clear()
+    items.append(dict(be_item(3), km=120000, price=8200))
+    scan.main()
+    assert any("NOUVELLE ANNONCE" in m and "🇧🇪" in m for m in sent), sent       # ensuite : alertes normales

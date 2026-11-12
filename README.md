@@ -1,6 +1,6 @@
 # Alerte auto NL — Golf 6 / Golf 5 GTI / Polo 6
 
-Surveille **Marktplaats.nl** et **AutoScout24.nl** toutes les 20 minutes, garde une base complète
+Surveille **Marktplaats.nl**, **AutoScout24.nl** (Pays-Bas), **2dehands.be** et **AutoScout24.be** (Belgique) toutes les 20 minutes, garde une base complète
 des annonces et t'envoie un **WhatsApp** à chaque nouvelle annonce qui colle à tes critères.
 
 **Critères (modifiables dans `config.json`)**
