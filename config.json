@@ -1,15 +1,23 @@
 {
   "_aide": "Modifie les valeurs ci-dessous puis commit : le prochain scan les applique.",
-  "max_price_ht": 19000,
-  "max_price_ht_by_model": {
-    "gti": 22000
-  },
+  "search_id": "golf6-golf5gti-polo6",
+  "max_price_ht": 9000,
   "vat_rate": 0.21,
-  "max_km": 160000,
-  "year_min": 2017,
-  "year_max": 2020,
-  "include_variant": true,
-  "interior_probable_ok": true,
+  "max_km": 200000,
+  "years": {
+    "golf6": [
+      2008,
+      2013
+    ],
+    "golf5gti": [
+      2004,
+      2009
+    ],
+    "polo6": [
+      2017,
+      2025
+    ]
+  },
   "notify_statuses": [
     "match",
     "a_verifier"

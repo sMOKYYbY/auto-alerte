@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Alerte Golf · GTI · A3</title>
+<title>Alerte Golf · Polo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -59,7 +59,7 @@ footer a{color:var(--accent)}
 </head>
 <body>
 <header>
-  <h1>Golf 7.5 R-Line · GTI · A3 8V2 S line</h1>
+  <h1>Golf 6 essence · Golf 5 GTI · Polo 6</h1>
   <div class="sub" id="sub">Chargement…</div>
   <div class="stats" id="stats"></div>
 </header>
@@ -68,16 +68,16 @@ footer a{color:var(--accent)}
     <button data-v="ok" class="on">Bonnes</button><button data-v="match">OK seulement</button><button data-v="all">Tout</button>
   </div>
   <div class="seg" id="fModel">
-    <button data-v="" class="on">Toutes</button><button data-v="golf">R-Line</button><button data-v="gti">GTI</button><button data-v="a3">A3</button>
+    <button data-v="" class="on">Toutes</button><button data-v="golf6">Golf 6</button><button data-v="golf5gti">Golf 5 GTI</button><button data-v="polo6">Polo 6</button>
   </div>
   <select id="sort">
-    <option value="price">Prix HT ↑</option><option value="deal">Meilleure affaire</option>
+    <option value="price">Coût ↑</option><option value="deal">Meilleure affaire</option>
     <option value="km">Km ↑</option><option value="new">Plus récentes</option>
   </select>
 </div></div>
 <main id="list"></main>
 <footer>Sources : Marktplaats.nl, AutoScout24.nl · <a href="listings.csv">Télécharger en CSV (Excel)</a><br>
-Prix HT = prix affiché ÷ 1,21 sauf si l'annonce donne un prix excl. BTW. Toujours confirmer TVA, intérieur et prix export (hors rest-BPM) avec le vendeur.</footer>
+Coût = prix HT si la TVA est récupérable (⭐), sinon prix affiché (marge ou particulier). Toujours confirmer la TVA et le prix export (hors rest-BPM) avec le vendeur.</footer>
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -90,14 +90,14 @@ function seg(id,key){ document.querySelectorAll(`#${id} button`).forEach(b=>b.on
 seg('fStatus','status'); seg('fModel','model'); $('#sort').onchange=e=>{st.sort=e.target.value;render();};
 const LBL={match:'✅ OK',a_verifier:'🟡 À vérifier',rejete:'Écartée'};
 function chip(label,val){
-  const cls = /^(oui|confirmé|récupérable|ok)$/.test(val)?'y':(/^(non|marge)$/.test(val)?'n':'q');
+  const cls = /^(oui|confirmé|récupérable|ok)$/.test(val)?'y':(/^non$/.test(val)?'n':'q');
   return `<span class="chip ${cls}">${label} : ${val??'?'}</span>`; }
 function render(){
   let rows = DATA.filter(c=>!c.gone || st.status==='all');
   if(st.status==='ok') rows=rows.filter(c=>c.status!=='rejete');
   if(st.status==='match') rows=rows.filter(c=>c.status==='match');
   if(st.model) rows=rows.filter(c=>c.model===st.model);
-  const k={price:c=>c.price_ht??1e9, deal:c=>c.deal_pct??999, km:c=>c.km??1e9, new:c=>-Date.parse(c.first_seen||0)}[st.sort];
+  const k={price:c=>c.cost??c.price??1e9, deal:c=>c.deal_pct??999, km:c=>c.km??1e9, new:c=>-Date.parse(c.first_seen||0)}[st.sort];
   rows.sort((a,b)=>k(a)-k(b));
   $('#list').innerHTML = rows.length ? rows.map(c=>{
     const ck=c.checks||{}, d=c.deal_pct;
@@ -105,11 +105,11 @@ function render(){
       ${c.image&&/^https:\/\//.test(c.image)?`<div class="img" style="background-image:url('${encodeURI(c.image)}')"></div>`:''}
       <div class="body">
         <div class="top"><div class="title">${esc(c.title)}</div><span class="badge ${c.status}">${c.gone?'Disparue':LBL[c.status]}</span></div>
-        <div class="price"><b>${eur(c.price_ht)} HT</b><small>${eur(c.price)} TTC</small>
+        <div class="price"><b>${eur(ck.tva==='récupérable'?(c.cost??c.price_ht):c.price)}</b><small>${ck.tva==='récupérable'?'HT ⭐ · '+eur(c.price)+' TTC':(ck.tva==='marge'||ck.tva==='particulier'?'prix final ('+esc(ck.tva)+')':'TTC · TVA ?')}</small>
           ${d!=null?`<span class="deal ${d<0?'good':'bad'}">${d>0?'+':''}${d}% vs comparables</span>`:''}
           ${c.prev_price&&c.price<c.prev_price?`<span class="deal good">📉 était ${eur(c.prev_price)}</span>`:''}</div>
         <div class="meta">${[c.first_reg||c.year||'?', c.km?c.km.toLocaleString('fr-BE')+' km':'? km', esc(c.city), c.source+(c.also_on&&c.also_on.length?' (+'+c.also_on.join(', ')+')':'')].filter(Boolean).join(' · ')}</div>
-        <div class="chips">${chip('Auto',esc(ck.auto))}${chip('Toit',ck.toit)}${chip('Intérieur',ck.interieur)}${chip('TVA',ck.tva)}</div>
+        <div class="chips">${chip('Auto',esc(ck.auto))}${chip('Toit',ck.toit)}${chip('TVA',ck.tva)}</div>
         ${c.warnings&&c.warnings.length?`<div class="note">⚠️ ${esc(c.warnings.join(' · '))}</div>`:''}
         ${c.status==='rejete'&&c.reasons?`<div class="why">✗ ${esc(c.reasons.join(' · '))}</div>`:''}
         <a class="go" href="${safeUrl(c.url)}" target="_blank" rel="noopener">Voir l'annonce</a>
@@ -119,7 +119,7 @@ fetch('listings.json?'+Date.now()).then(r=>r.json()).then(j=>{
   DATA=j.listings||[];
   const live=DATA.filter(c=>!c.gone);
   const n=s=>live.filter(c=>c.status===s).length;
-  $('#sub').textContent='Mis à jour '+new Date(j.updated).toLocaleString('fr-BE')+' · ≤ '+eur(j.config.max_price_ht)+' HT'+Object.entries(j.config.max_price_ht_by_model||{}).map(([m,v])=>' ('+m.toUpperCase()+' ≤ '+eur(v)+')').join('')+' · ≤ '+(j.config.max_km/1000)+'k km · '+j.config.year_min+'–'+j.config.year_max;
+  $('#sub').textContent='Mis à jour '+new Date(j.updated).toLocaleString('fr-BE')+' · coût ≤ '+eur(j.config.max_price_ht)+' · ≤ '+(j.config.max_km/1000)+'k km · auto + toit ouvrant';
   const src=Object.entries(j.sources||{}).map(([k,v])=>`<div class="stat"><b>${v.ok?'●':'○'} ${v.last_count??0}</b><span>${k}${v.ok?'':' (bloqué ?)'}</span></div>`).join('');
   $('#stats').innerHTML=`<div class="stat"><b>${n('match')}</b><span>OK</span></div><div class="stat"><b>${n('a_verifier')}</b><span>À vérifier</span></div><div class="stat"><b>${live.length}</b><span>Analysées</span></div>`+src;
   render();

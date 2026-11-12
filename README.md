@@ -1,20 +1,19 @@
-# Alerte auto NL — Golf 7.5 R-Line / Audi A3 8V2 S line
+# Alerte auto NL — Golf 6 / Golf 5 GTI / Polo 6
 
 Surveille **Marktplaats.nl** et **AutoScout24.nl** toutes les 20 minutes, garde une base complète
 des annonces et t'envoie un **WhatsApp** à chaque nouvelle annonce qui colle à tes critères.
 
-**Critères (modifiables dans `config.json`)** — GTI : budget propre dans `max_price_ht_by_model`
-- VW Golf 7.5 R-Line, Golf 7.5 GTI ou Audi A3 8V2 S line, 2017–2020
-- Boîte automatique (DSG / S tronic)
-- Toit ouvrant / panoramique
-- Intérieur R-Line / S line (« confirmé » si l'annonce le dit clairement, sinon « à vérifier »)
-- TVA récupérable uniquement (BTW verrekenbaar / BTW-auto) — les voitures « marge » sont écartées
-- ≤ 17 000 € HT, ≤ 160 000 km
+**Critères (modifiables dans `config.json`)**
+- VW **Golf 6 essence** (2008–2013), **Golf 5 GTI** (2004–2009) ou **Polo 6** (2017+)
+- Boîte automatique (DSG) et toit ouvrant / panoramique
+- Coût ≤ 9 000 € : prix HT si la TVA est récupérable (⭐), sinon prix affiché (marge ou particulier)
+- ≤ 200 000 km
+- La TVA récupérable est un plus, pas une obligation
 
 **Ce que tu reçois**
 - ✅ annonce qui coche tout · 🟡 annonce presque bonne à vérifier (intérieur ou TVA non précisés) · 📉 baisse de prix
 - Un tableau en ligne (GitHub Pages) avec toute la base, filtres, et un export CSV pour Excel
-- Un score « vs comparables » : écart du prix HT avec la médiane des annonces du même modèle et de la même année
+- Un score « vs comparables » : écart du prix affiché avec la médiane des annonces du même modèle et de la même année
 
 ---
 
