@@ -137,6 +137,11 @@ EXCL_PRICE = [
     RX(r"([\d.]{4,7}),?-?\s*(?:euro\s*)?excl\.?\s*btw"),
 ]
 
+DAMAGE = RX(r"project\s*auto|projectauto|klus\s*auto|klusauto|opknapper|motor\s*schade|motorschade|"
+            r"versnellingsbak\s*(?:defect|kapot)|bak\s*(?:defect|kapot)|\bdefect\b|schade\s*auto|schadeauto|"
+            r"start\s*niet|rijdt\s*niet|loopt\s*niet|voor\s*onderdelen|export\s*only|alleen\s*export|"
+            r"ketting\s*(?:hoorbaar|rammelt|ratelt)|mechatronic\w*\s*(?:defect|kapot)")
+TUNED = RX(r"stage\s*[123]\b|\bremap\b|chip\s*tun\w*|getuned|\b[34]\d{2}\s*\+?\s*pk\b")
 DIESEL = RX(r"\btdi\b|\bgtd\b|diesel|\bblue\s*tdi\b")
 NO_GEN = RX(r"$^")
 
@@ -325,6 +330,11 @@ def evaluate(c: dict) -> dict:
         reasons.append("prix anormal (pièces ?)")
     elif cost and cost > budget:
         reasons.append(f"budget : {cost:,} €".replace(",", "."))
+
+    if DAMAGE.search(blob):
+        warn.append("à réparer / projet ?")
+    if TUNED.search(blob):
+        warn.append("moteur modifié")
 
     c["checks"] = checks
     c["reasons"] = reasons
@@ -728,7 +738,7 @@ def main():
         state = {"source_status": state.get("source_status", {})}
     state["search_id"] = sid
     first_run = not state.get("bootstrapped")
-    RULES_VERSION = 7
+    RULES_VERSION = 8
     if state.get("rules_version") != RULES_VERSION:
         state.pop("last_full_sweep", None)
         for c in db.values():

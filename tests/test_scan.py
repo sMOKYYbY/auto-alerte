@@ -177,3 +177,12 @@ def test_broken_unicode_does_not_crash_save(tmp_path):
     scan.save(tmp_path / "x.json", {"t": "Golf \ud835 GTI"})
     assert "Golf" in (tmp_path / "x.json").read_text(encoding="utf-8")
     assert scan.clean_text("a\ud835b") == "a?b"
+
+
+def test_project_and_tuned_cars_flagged():
+    c = scan.evaluate(base(title="Volkswagen Golf GTI – Projectauto / Klusauto DSG schuifdak", year=2007, price=3000))
+    assert c["status"] == "a_verifier" and "à réparer / projet ?" in c["warnings"]
+    c = scan.evaluate(base(title="Volkswagen Golf 1.4 TSI Highline DSG schuifdak", text="Ketting hoorbaar, Marge"))
+    assert "à réparer / projet ?" in c["warnings"]
+    c = scan.evaluate(base(title="Volkswagen Golf 2.0 GTI STAGE 2 FULL OPTION 300+ PK DSG pano", year=2010, text="Marge"))
+    assert "moteur modifié" in c["warnings"]
