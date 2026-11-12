@@ -171,3 +171,9 @@ def test_wiped_text_is_reread_before_reevaluation(tmp_path, monkeypatch):
     scan.main()
     c = json.loads((tmp_path / "data" / "db.json").read_text())["mp:m1"]
     assert c["checks"]["tva"] == "marge" and c["detail_done"] is True
+
+
+def test_broken_unicode_does_not_crash_save(tmp_path):
+    scan.save(tmp_path / "x.json", {"t": "Golf \ud835 GTI"})
+    assert "Golf" in (tmp_path / "x.json").read_text(encoding="utf-8")
+    assert scan.clean_text("a\ud835b") == "a?b"

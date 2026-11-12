@@ -104,6 +104,11 @@ def values_for_keys(obj, keys):
     return out
 
 
+def clean_text(s: str) -> str:
+    """Retire les caractères invalides (surrogates isolés) venant de certaines descriptions."""
+    return s.encode("utf-8", errors="replace").decode("utf-8")
+
+
 def strip_html(s: str) -> str:
     s = re.sub(r"<br\s*/?>|</p>|</li>", "\n", s, flags=re.I)
     return re.sub(r"<[^>]+>", " ", s)
@@ -571,7 +576,8 @@ def load(path, default):
 
 def save(path, obj):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(obj, ensure_ascii=False, indent=1), encoding="utf-8")
+    # errors="replace" : un caractère cassé dans une annonce (moitié d'emoji) ne doit jamais bloquer la sauvegarde
+    path.write_bytes(json.dumps(obj, ensure_ascii=False, indent=1).encode("utf-8", errors="replace"))
 
 
 def dedup_key(c):
@@ -692,7 +698,7 @@ def export(db, state):
         public.append(d)
     save(DOCS / "listings.json", {"updated": NOW_ISO, "config": {k: v for k, v in CONFIG.items() if not k.startswith("_")},
                                   "sources": state.get("source_status", {}), "listings": public})
-    with open(DOCS / "listings.csv", "w", newline="", encoding="utf-8-sig") as f:
+    with open(DOCS / "listings.csv", "w", newline="", encoding="utf-8-sig", errors="replace") as f:
         w = csv.writer(f, delimiter=";")
         w.writerow(CSV_COLS)
         for c in rows:
@@ -806,7 +812,7 @@ def main():
         except Exception as e:
             log("  détail ERREUR", c["uid"], repr(e)); txt, flag = None, None
         if txt:
-            c["text"] = (c.get("text", "") + "\n" + txt)[:30000]
+            c["text"] = clean_text((c.get("text", "") + "\n" + txt)[:30000])
             c["vat_flag"] = flag
             c["detail_done"] = True
             c["needs_eval"] = False
