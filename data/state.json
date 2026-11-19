@@ -2,26 +2,26 @@
  "source_status": {
   "Marktplaats": {
    "fails": 0,
-   "last_count": 1294,
-   "last_run": "2026-11-19T17:38:28+00:00",
+   "last_count": 1290,
+   "last_run": "2026-11-19T23:48:29+00:00",
    "ok": true
   },
   "AutoScout24": {
    "fails": 0,
-   "last_count": 104,
-   "last_run": "2026-11-19T17:38:28+00:00",
+   "last_count": 105,
+   "last_run": "2026-11-19T23:48:29+00:00",
    "ok": true
   },
   "2dehands": {
    "fails": 0,
-   "last_count": 514,
-   "last_run": "2026-11-19T17:38:28+00:00",
+   "last_count": 510,
+   "last_run": "2026-11-19T23:48:29+00:00",
    "ok": true
   },
   "AutoScout24.be": {
    "fails": 0,
    "last_count": 52,
-   "last_run": "2026-11-19T17:38:28+00:00",
+   "last_run": "2026-11-19T23:48:29+00:00",
    "ok": true
   }
  },
@@ -60,14 +60,15 @@
   "mp:m2460559233",
   "mp:m2460590985",
   "mp:m2463069356",
+  "mp:m2463070437",
   "mp:m2464259413",
   "mp:m2464497817",
   "mp:m2464884796",
   "mp:m2466561044",
   "mp:m2466961433"
  ],
- "last_run": "2026-11-19T17:38:28+00:00",
- "last_full_sweep": "2026-11-19T17:38:28+00:00",
+ "last_run": "2026-11-19T23:48:29+00:00",
+ "last_full_sweep": "2026-11-19T23:48:29+00:00",
  "sources_bootstrapped": [
   "Marktplaats",
   "AutoScout24",
