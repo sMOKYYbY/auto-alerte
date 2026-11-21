@@ -309,3 +309,32 @@ def test_readded_models_bootstrap_silently(tmp_path, monkeypatch):
     items.append(dict(a3, uid="mp:a2", id="a2", km=90000, price=21000))
     scan.main()
     assert any("NOUVELLE ANNONCE Audi A3" in m for m in sent), sent
+
+
+def test_unreadable_listing_does_not_block_bootstrap(tmp_path, monkeypatch):
+    monkeypatch.setattr(scan, "DATA", tmp_path / "data")
+    monkeypatch.setattr(scan, "DOCS", tmp_path / "docs")
+    monkeypatch.setattr(scan, "pause", lambda: None)
+    sent = []
+    monkeypatch.setattr(scan, "whatsapp", lambda t, dry=False: sent.append(t) or True)
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "db.json").write_text("{}")
+    srcs = list(scan.MP_SITES) + list(scan.AS_SITES)
+    (tmp_path / "data" / "state.json").write_text(json.dumps({
+        "bootstrapped": True, "search_id": scan.CONFIG["search_id"], "rules_version": 9,
+        "last_full_sweep": scan.NOW_ISO, "sources_bootstrapped": srcs,
+        "models_bootstrapped": ["golf6", "golf5gti", "polo6"], "source_status": {s: {"ok": True} for s in srcs}}))
+    a3 = {"uid": "as:x", "source": "AutoScout24", "country": "NL", "id": "x", "model": "a3", "family": "a3",
+          "title": "Audi A3 Sportback 30 TFSI S-line S tronic pano", "url": "https://x/x", "price": 18695,
+          "km": 90000, "year": 2019, "transmission": "Automaat", "text": ""}
+    monkeypatch.setattr(scan, "mp_search", lambda pages, site=None: ([], True))
+    monkeypatch.setattr(scan, "as_search", lambda pages, site=None: ([dict(a3)] if site == "AutoScout24" else [], True))
+    monkeypatch.setattr(scan, "as_detail", lambda c: (None, None))      # la fiche ne s'ouvre jamais
+    monkeypatch.setattr(scan.sys, "argv", ["scan.py"])
+    for _ in range(3):
+        scan.main()
+    assert any(m.startswith("🔁 Recherches ajoutées") for m in sent), sent
+    st = json.loads((tmp_path / "data" / "state.json").read_text())
+    assert set(st["models_bootstrapped"]) == set(scan.MODELS)
+    c = json.loads((tmp_path / "data" / "db.json").read_text())["as:x"]
+    assert c["status"] == "a_verifier" and "fiche illisible" in c["warnings"]

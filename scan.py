@@ -953,7 +953,21 @@ def main():
             c["vat_flag"] = flag
             c["detail_done"] = True
             c["needs_eval"] = False
+            c.pop("detail_tries", None)
             evaluate(c)
+        else:
+            # Fiche illisible (souvent : annonce retirée). Après 3 essais on arrête de la relire.
+            c["detail_tries"] = c.get("detail_tries", 0) + 1
+            if c["detail_tries"] >= 3:
+                c["needs_eval"] = False
+                if c.get("last_seen") != NOW_ISO:
+                    c["gone"] = True
+                else:
+                    c["detail_done"] = True
+                    evaluate(c)
+                    c["warnings"] = c.get("warnings", []) + ["fiche illisible"]
+                    if c["status"] == "match":
+                        c["status"] = "a_verifier"
         pause()
 
     # Doublons inter-sites
@@ -992,7 +1006,7 @@ def main():
 
     for src in new_sources:
         pending = [c for c in db.values() if c.get("source") == src and not c.get("gone")
-                   and not c.get("detail_done") and c.get("needs_eval")]
+                   and not c.get("detail_done") and c.get("needs_eval") and c.get("detail_tries", 0) < 3]
         if not pending and src_status.get(src, {}).get("ok"):
             mine = [c for c in db.values() if c.get("source") == src and not c.get("gone")]
             n_ok = sum(1 for c in mine if c.get("status") == "match")
@@ -1002,7 +1016,8 @@ def main():
                      f"Elles sont dans le tableau ; les nouvelles t'arriveront ici.\n{CONFIG.get('dashboard_url') or ''}", dry)
             state["sources_bootstrapped"].append(src)
     if new_models:
-        pending = [c for c in db.values() if not c.get("gone") and not c.get("detail_done") and c.get("needs_eval")]
+        pending = [c for c in db.values() if not c.get("gone") and not c.get("detail_done") and c.get("needs_eval")
+                   and c.get("detail_tries", 0) < 3]
         if not pending:
             live = [c for c in db.values() if not c.get("gone")]
             parts = []
