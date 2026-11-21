@@ -3,25 +3,25 @@
   "Marktplaats": {
    "fails": 0,
    "last_count": 900,
-   "last_run": "2026-11-21T13:03:17+00:00",
+   "last_run": "2026-11-21T13:05:39+00:00",
    "ok": true
   },
   "AutoScout24": {
    "fails": 0,
    "last_count": 134,
-   "last_run": "2026-11-21T13:03:17+00:00",
+   "last_run": "2026-11-21T13:05:39+00:00",
    "ok": true
   },
   "2dehands": {
    "fails": 0,
-   "last_count": 555,
-   "last_run": "2026-11-21T13:03:17+00:00",
+   "last_count": 554,
+   "last_run": "2026-11-21T13:05:39+00:00",
    "ok": true
   },
   "AutoScout24.be": {
    "fails": 0,
    "last_count": 123,
-   "last_run": "2026-11-21T13:03:17+00:00",
+   "last_run": "2026-11-21T13:05:39+00:00",
    "ok": true
   }
  },
@@ -93,7 +93,7 @@
   "mp:m2468091261",
   "mp:m2468319580"
  ],
- "last_run": "2026-11-21T13:03:17+00:00",
+ "last_run": "2026-11-21T13:05:39+00:00",
  "sources_bootstrapped": [
   "Marktplaats",
   "AutoScout24",
