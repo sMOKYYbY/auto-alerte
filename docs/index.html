@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Alerte Golf · Polo</title>
+<title>Alerte Golf · Polo · A3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -28,7 +28,7 @@ h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
 .stat span{font-size:12px;color:var(--muted)}
 .bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
 .controls{max-width:1100px;margin:auto;padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap}
-.seg{display:flex;background:var(--chip);border-radius:10px;padding:3px}
+.seg{display:flex;flex-wrap:wrap;background:var(--chip);border-radius:10px;padding:3px}
 .seg button{border:0;background:none;color:var(--muted);font:500 13px Inter,sans-serif;padding:6px 10px;border-radius:8px;cursor:pointer}
 .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 select{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:6px 8px;font:500 13px Inter,sans-serif}
@@ -59,7 +59,7 @@ footer a{color:var(--accent)}
 </head>
 <body>
 <header>
-  <h1>Golf 6 essence · Golf 5 GTI · Polo 6</h1>
+  <h1>Golf 7.5 · A3 · Golf 6 · Golf 5 GTI · Polo 6</h1>
   <div class="sub" id="sub">Chargement…</div>
   <div class="stats" id="stats"></div>
 </header>
@@ -68,7 +68,7 @@ footer a{color:var(--accent)}
     <button data-v="ok" class="on">Bonnes</button><button data-v="match">OK seulement</button><button data-v="all">Tout</button>
   </div>
   <div class="seg" id="fModel">
-    <button data-v="" class="on">Toutes</button><button data-v="golf6">Golf 6</button><button data-v="golf5gti">Golf 5 GTI</button><button data-v="polo6">Polo 6</button>
+    <button data-v="" class="on">Toutes</button><button data-v="golf7">Golf 7.5 R-Line</button><button data-v="gti7">GTI 7.5</button><button data-v="a3">A3</button><button data-v="golf6">Golf 6</button><button data-v="golf5gti">Golf 5 GTI</button><button data-v="polo6">Polo 6</button>
   </div>
   <select id="sort">
     <option value="price">Coût ↑</option><option value="deal">Meilleure affaire</option>
@@ -109,7 +109,7 @@ function render(){
           ${d!=null?`<span class="deal ${d<0?'good':'bad'}">${d>0?'+':''}${d}% vs comparables</span>`:''}
           ${c.prev_price&&c.price<c.prev_price?`<span class="deal good">📉 était ${eur(c.prev_price)}</span>`:''}</div>
         <div class="meta">${[c.first_reg||c.year||'?', c.km?c.km.toLocaleString('fr-BE')+' km':'? km', ({BE:'🇧🇪 ',NL:'🇳🇱 '}[c.country||'NL']||'')+esc(c.city), c.source+(c.also_on&&c.also_on.length?' (+'+c.also_on.join(', ')+')':'')].filter(Boolean).join(' · ')}</div>
-        <div class="chips">${chip('Auto',esc(ck.auto))}${chip('Toit',ck.toit)}${chip('TVA',ck.tva)}</div>
+        <div class="chips">${chip('Auto',esc(ck.auto))}${chip('Toit',ck.toit)}${ck.interieur?chip('Intérieur',esc(ck.interieur)):''}${chip('TVA',ck.tva)}</div>
         ${c.warnings&&c.warnings.length?`<div class="note">⚠️ ${esc(c.warnings.join(' · '))}</div>`:''}
         ${c.status==='rejete'&&c.reasons?`<div class="why">✗ ${esc(c.reasons.join(' · '))}</div>`:''}
         <a class="go" href="${safeUrl(c.url)}" target="_blank" rel="noopener">Voir l'annonce</a>
@@ -119,7 +119,7 @@ fetch('listings.json?'+Date.now()).then(r=>r.json()).then(j=>{
   DATA=j.listings||[];
   const live=DATA.filter(c=>!c.gone);
   const n=s=>live.filter(c=>c.status===s).length;
-  $('#sub').textContent='Mis à jour '+new Date(j.updated).toLocaleString('fr-BE')+' · coût ≤ '+eur(j.config.max_price_ht)+' · ≤ '+(j.config.max_km/1000)+'k km · auto + toit ouvrant';
+  $('#sub').textContent='Mis à jour '+new Date(j.updated).toLocaleString('fr-BE')+' · auto + toit ouvrant · budgets par modèle dans config.json';
   const src=Object.entries(j.sources||{}).map(([k,v])=>`<div class="stat"><b>${v.ok?'●':'○'} ${v.last_count??0}</b><span>${k}${v.ok?'':' (bloqué ?)'}</span></div>`).join('');
   $('#stats').innerHTML=`<div class="stat"><b>${n('match')}</b><span>OK</span></div><div class="stat"><b>${n('a_verifier')}</b><span>À vérifier</span></div><div class="stat"><b>${live.length}</b><span>Analysées</span></div>`+src;
   render();

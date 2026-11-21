@@ -1,14 +1,20 @@
-# Alerte auto NL — Golf 6 / Golf 5 GTI / Polo 6
+# Alerte auto NL/BE — Golf 7.5 · A3 · Golf 6 · Golf 5 GTI · Polo 6
 
 Surveille **Marktplaats.nl**, **AutoScout24.nl** (Pays-Bas), **2dehands.be** et **AutoScout24.be** (Belgique) toutes les 20 minutes, garde une base complète
 des annonces et t'envoie un **WhatsApp** à chaque nouvelle annonce qui colle à tes critères.
 
-**Critères (modifiables dans `config.json`)**
-- VW **Golf 6 essence** (2008–2013), **Golf 5 GTI** (2004–2009) ou **Polo 6** (2017+)
-- Boîte automatique (DSG) et toit ouvrant / panoramique
-- Coût ≤ 9 000 € : prix HT si la TVA est récupérable (⭐), sinon prix affiché (marge ou particulier)
-- ≤ 200 000 km
-- La TVA récupérable est un plus, pas une obligation
+**Critères (modifiables dans `config.json` → `models`)** — toutes : boîte automatique + toit ouvrant
+
+| Modèle | Années | Km max | Budget | TVA |
+|---|---|---|---|---|
+| Golf 7.5 R-Line (intérieur R-Line) | 2017–2020 | 160 000 | 19 000 € HT | récupérable obligatoire |
+| Golf 7.5 GTI | 2017–2020 | 160 000 | 22 000 € HT | récupérable obligatoire |
+| Audi A3 8V2 S line (intérieur S line) | 2017–2020 | 160 000 | 19 000 € HT | récupérable obligatoire |
+| Golf 6 essence | 2008–2013 | 200 000 | 9 000 € | en bonus (⭐) |
+| Golf 5 GTI | 2004–2009 | 200 000 | 9 000 € | en bonus (⭐) |
+| Polo 6 | 2017+ | 200 000 | 9 000 € | en bonus (⭐) |
+
+« En bonus » : le coût compté est le prix HT si la TVA est récupérable, sinon le prix affiché (marge ou particulier).
 
 **Ce que tu reçois**
 - ✅ annonce qui coche tout · 🟡 annonce presque bonne à vérifier (intérieur ou TVA non précisés) · 📉 baisse de prix

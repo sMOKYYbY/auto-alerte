@@ -225,7 +225,8 @@ def test_new_source_is_bootstrapped_silently(tmp_path, monkeypatch):
     (tmp_path / "data").mkdir()
     (tmp_path / "data" / "db.json").write_text("{}")
     (tmp_path / "data" / "state.json").write_text(json.dumps({
-        "bootstrapped": True, "search_id": scan.CONFIG["search_id"], "rules_version": 8,
+        "bootstrapped": True, "search_id": scan.CONFIG["search_id"], "rules_version": 9,
+        "models_bootstrapped": list(scan.MODELS),
         "last_full_sweep": scan.NOW_ISO,
         "source_status": {"Marktplaats": {"ok": True}, "AutoScout24": {"ok": True}}}))
 
@@ -244,3 +245,67 @@ def test_new_source_is_bootstrapped_silently(tmp_path, monkeypatch):
     items.append(dict(be_item(3), km=120000, price=8200))
     scan.main()
     assert any("NOUVELLE ANNONCE" in m and "🇧🇪" in m for m in sent), sent       # ensuite : alertes normales
+
+
+# --- Golf 7.5 / GTI 7.5 / A3 réintégrées (TVA récupérable obligatoire) -------------
+def test_golf7_rline_rules_back():
+    c = scan.evaluate(base(title="Volkswagen Golf 1.5 TSI 3x R-Line DSG Panoramadak", year=2018, km=98000,
+                           price=19900, text="BTW/marge: BTW verrekenbaar voor ondernemers. Sportstoelen R-Line"))
+    assert c["model"] == "golf7" and c["status"] == "match" and c["cost"] == round(19900 / 1.21), c
+    marge = scan.evaluate(base(title="Volkswagen Golf 1.5 TSI 3x R-Line DSG Pano", year=2018, km=98000,
+                               price=17000, text="BTW/marge: Marge"))
+    assert marge["status"] == "rejete" and "TVA non récupérable (marge)" in marge["reasons"]
+    no_trim = scan.evaluate(base(title="Volkswagen Golf 1.5 TSI Comfortline DSG Pano", year=2018, km=98000,
+                                 price=17000, text="BTW verrekenbaar"))
+    assert "pas R-Line/S line" in no_trim["reasons"]
+    km = scan.evaluate(base(title="Volkswagen Golf 1.5 TSI 3x R-Line DSG Pano", year=2018, km=170000,
+                            price=17000, text="BTW verrekenbaar"))
+    assert km["status"] == "rejete"                       # 160 000 km max pour la Golf 7.5
+
+
+def test_gti7_and_a3_back():
+    g = scan.evaluate(base(title="Volkswagen Golf 2.0 TSI GTI Performance DSG Pano", year=2019, km=120000,
+                           price=25000, text="BTW verrekenbaar"))
+    assert g["model"] == "gti7" and g["status"] == "match"
+    a = scan.evaluate(base(family="a3", title="Audi A3 Limousine 35 TFSI CoD Advance Sport 3x S-line S tronic pano",
+                           year=2019, km=138000, price=19950, text="BTW/Marge: BTW"))
+    assert a["model"] == "a3" and a["status"] == "match" and a["checks"]["interieur"] == "confirmé"
+    assert scan.evaluate(base(family="a3", title="Audi A3 Sportback 35 TFSI Edition One S-Line pano", year=2020,
+                              km=50000, price=19000, text="BTW"))["status"] == "rejete"
+
+
+def test_both_searches_coexist():
+    # Golf 6 de 2011 : règles « petit budget » (marge acceptée), Golf 7.5 de 2018 : règles « récentes »
+    old = scan.evaluate(base(title="Volkswagen Golf 1.4 TSI DSG schuifdak", year=2011, price=8500, text="Marge"))
+    assert old["model"] == "golf6" and old["status"] == "match" and "interieur" not in old["checks"]
+    assert scan.search_budget_incl("golf") == int(22000 * 1.21 * 1.02)
+    assert scan.search_budget_incl("polo") == int(9000 * 1.21 * 1.02)
+    assert scan.family_years("golf") == (2004, 2020) and scan.family_max_km("golf") == 200000
+
+
+def test_readded_models_bootstrap_silently(tmp_path, monkeypatch):
+    monkeypatch.setattr(scan, "DATA", tmp_path / "data")
+    monkeypatch.setattr(scan, "DOCS", tmp_path / "docs")
+    monkeypatch.setattr(scan, "pause", lambda: None)
+    sent = []
+    monkeypatch.setattr(scan, "whatsapp", lambda t, dry=False: sent.append(t) or True)
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "db.json").write_text("{}")
+    (tmp_path / "data" / "state.json").write_text(json.dumps({
+        "bootstrapped": True, "search_id": scan.CONFIG["search_id"], "rules_version": 9,
+        "last_full_sweep": scan.NOW_ISO, "sources_bootstrapped": list(scan.MP_SITES) + list(scan.AS_SITES),
+        "source_status": {s: {"ok": True} for s in list(scan.MP_SITES) + list(scan.AS_SITES)}}))
+    a3 = {"uid": "mp:a1", "source": "Marktplaats", "country": "NL", "id": "a1", "model": "a3", "family": "a3",
+          "title": "Audi A3 Limousine 35 TFSI 3x S-line S tronic pano", "url": "https://x/a1", "price": 19950,
+          "km": 120000, "year": 2019, "transmission": "Automaat", "text": ""}
+    items = [a3]
+    monkeypatch.setattr(scan, "mp_search", lambda pages, site=None: (items if site == "Marktplaats" else [], True))
+    monkeypatch.setattr(scan, "as_search", lambda pages, site=None: ([], True))
+    monkeypatch.setattr(scan, "mp_detail", lambda c: "BTW/Marge: BTW verrekenbaar")
+    monkeypatch.setattr(scan.sys, "argv", ["scan.py"])
+    scan.main()
+    assert len(sent) == 1 and sent[0].startswith("🔁 Recherches ajoutées") and "Audi A3 8V2 S line : 1 OK" in sent[0]
+    sent.clear()
+    items.append(dict(a3, uid="mp:a2", id="a2", km=90000, price=21000))
+    scan.main()
+    assert any("NOUVELLE ANNONCE Audi A3" in m for m in sent), sent

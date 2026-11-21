@@ -1,23 +1,65 @@
 {
   "_aide": "Modifie les valeurs ci-dessous puis commit : le prochain scan les applique.",
   "search_id": "golf6-golf5gti-polo6",
-  "max_price_ht": 9000,
   "vat_rate": 0.21,
-  "max_km": 200000,
-  "years": {
-    "golf6": [
-      2008,
-      2013
-    ],
-    "golf5gti": [
-      2004,
-      2009
-    ],
-    "polo6": [
-      2017,
-      2025
-    ]
+  "models": {
+    "golf7": {
+      "years": [
+        2017,
+        2020
+      ],
+      "max_km": 160000,
+      "budget": 19000,
+      "vat_required": true
+    },
+    "gti7": {
+      "years": [
+        2017,
+        2020
+      ],
+      "max_km": 160000,
+      "budget": 22000,
+      "vat_required": true
+    },
+    "a3": {
+      "years": [
+        2017,
+        2020
+      ],
+      "max_km": 160000,
+      "budget": 19000,
+      "vat_required": true
+    },
+    "golf6": {
+      "years": [
+        2008,
+        2013
+      ],
+      "max_km": 200000,
+      "budget": 9000,
+      "vat_required": false
+    },
+    "golf5gti": {
+      "years": [
+        2004,
+        2009
+      ],
+      "max_km": 200000,
+      "budget": 9000,
+      "vat_required": false
+    },
+    "polo6": {
+      "years": [
+        2017,
+        2025
+      ],
+      "max_km": 200000,
+      "budget": 9000,
+      "vat_required": false
+    }
   },
+  "_models_aide": "budget = prix HT max si vat_required (TVA récupérable obligatoire), sinon coût max (HT si TVA récupérable, sinon prix affiché)",
+  "interior_probable_ok": true,
   "notify_statuses": [
     "match",
     "a_verifier"

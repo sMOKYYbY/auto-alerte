@@ -147,43 +147,102 @@ TUNED = RX(r"stage\s*[123]\b|\bremap\b|chip\s*tun\w*|getuned|\b[34]\d{2}\s*\+?\s
 DIESEL = RX(r"\btdi\b|\bgtd\b|diesel|\bblue\s*tdi\b")
 NO_GEN = RX(r"$^")
 
+R_LINE_INTERIOR = RX(
+    r"r[\s-]?line\s*(?:interieur|interior|int\.|binnen)|"
+    r"(?:in[\s-]*(?:en|&|/|\+)\s*ex|interieur\s*(?:en|&|/|\+)\s*exterieur|binnen\s*en\s*buiten)[^\n]{0,15}r[\s-]?line|"
+    r"r[\s-]?line[^\n]{0,15}(?:in[\s-]*(?:en|&|/|\+)\s*ex|interieur\s*(?:en|&|/|\+)\s*exterieur|binnen\s*en\s*buiten)|"
+    r"\b3\s*x\s*r[\s-]?line|r[\s-]?line\s*(?:sport)?\s*pakket[^\n]{0,30}interieur|"
+    r"sportstoelen\s*(?:\"|')?r[\s-]?line|r[\s-]?line[\s-]*(?:sport)?(?:stoelen|zetels|kuipstoelen|bekleding|seats)|"
+    r"stoelbekleding[^\n]{0,20}r[\s-]?line|r[\s-]?line\s*alcantara")
+S_LINE_INTERIOR = RX(
+    r"s[\s-]?line\s*(?:interieur|interior|int\.|binnen)|"
+    r"(?:in[\s-]*(?:en|&|/|\+)\s*ex|interieur\s*(?:en|&|/|\+)\s*exterieur|binnen\s*en\s*buiten)[^\n]{0,15}s[\s-]?line|"
+    r"s[\s-]?line[^\n]{0,15}(?:in[\s-]*(?:en|&|/|\+)\s*ex|interieur\s*(?:en|&|/|\+)\s*exterieur|binnen\s*en\s*buiten)|"
+    r"\b3\s*x\s*s[\s-]?line|s[\s-]?line\s*sport\s*pa(?:kket|ckage)|sportpakket\s*s[\s-]?line|"
+    r"sportstoelen\s*(?:\"|')?s[\s-]?line|s[\s-]?line[\s-]*(?:sport)?(?:stoelen|zetels|kuipstoelen|bekleding|seats)|"
+    r"stoelbekleding[^\n]{0,20}s[\s-]?line|s[\s-]?line\s*(?:alcantara|leder|leer)")
+
 MODELS = {
+    # ---- Recherche « récente » : TVA récupérable obligatoire, budget HT, intérieur R/S line ----
+    "golf7": {
+        "label": "VW Golf 7.5 R-Line", "family": "golf", "petrol_only": False,
+        "is_model": RX(r"\bgolf\b"),
+        "exclude": RX(r"sportsvan|golf\s*plus|alltrack|\bgti\b|\bgtd\b|\bgte\b|e[\s-]?golf|"
+                      r"golf\s+r(?![\s-]*line)\b|\betsi\b|golf\s*8\b|golf\s*viii|\bmk\s*8\b"),
+        "trim": RX(r"r[\s-]?line|business\s*r\b|\bhighline\s*r\b"),
+        "interior_yes": R_LINE_INTERIOR,
+        "interior_ext_only": RX(r"r[\s-]?line\s*(?:exterieur|exterior|ext\.|buiten|styling|look)"),
+        "gen_sure": RX(r"\b7\.5\b|\bvii\.?5\b|1\.5\s*tsi|active\s*info\s*display|digital(?:e)?\s*cockpit|virtual|"
+                       r"discover\s*pro|composition\s*media"),
+        "gen_wrong": RX(r"\betsi\b|golf\s*8\b|golf\s*viii|\bmk\s*8\b"),
+    },
+    "gti7": {
+        "label": "VW Golf 7.5 GTI", "family": "golf", "petrol_only": True,
+        "is_model": RX(r"\bgolf\b.*\bgti\b|\bgti\b.*\bgolf\b"),
+        "exclude": RX(r"\bgtd\b|\bgte\b|golf\s*8\b|golf\s*viii|\bmk\s*8\b|variant|sportsvan"),
+        "trim": RX(r"\bgti\b"),
+        "interior_yes": RX(r"\bgti\b"),          # intérieur GTI de série
+        "interior_ext_only": NO_GEN,
+        "gen_sure": RX(r"\b7\.5\b|\bvii\.?5\b|\b245\s*(?:pk|ch|hp)?\b|performance|\btcr\b|active\s*info\s*display|"
+                       r"digital(?:e)?\s*cockpit|virtual|discover\s*pro|composition\s*media"),
+        "gen_wrong": RX(r"golf\s*8\b|golf\s*viii|\bmk\s*8\b"),
+    },
+    "a3": {
+        "label": "Audi A3 8V2 S line", "family": "a3", "petrol_only": False,
+        "is_model": RX(r"\ba3\b"),
+        "exclude": RX(r"\bs3\b|\brs\s?3\b|cabrio|\b8y\b|edition\s*one|advanced\s*edition|\be[\s-]?tron\s*40\b|"
+                      r"\b40\s*tfsi\s*e\b|\b45\s*tfsi\s*e\b"),
+        "trim": RX(r"s[\s-]?line|pro\s*line\s*s\b|sport\s*s\b"),
+        "interior_yes": S_LINE_INTERIOR,
+        "interior_ext_only": RX(r"s[\s-]?line\s*(?:exterieur|exterior|ext\.|buiten|styling|look)"),
+        "gen_sure": RX(r"\b8v\b|\b8v2\b|advance\s*sport|\be[\s-]?tron\b(?!\s*\d{2}\s*tfsi)|\bcod\b|1\.5\s*tfsi|1\.0\s*tfsi|"
+                       r"1\.4\s*tfsi|pro\s*line|design\s*pro\s*line|sport\s*pro\s*line"),
+        "gen_wrong": RX(r"\b8y\b"),
+    },
+    # ---- Recherche « petit budget » : TVA en bonus ----
     "golf6": {
-        "label": "VW Golf 6 essence",
-        "family": "golf",
+        "label": "VW Golf 6 essence", "family": "golf", "petrol_only": True,
         "is_model": RX(r"\bgolf\b"),
         "exclude": RX(r"sportsvan|golf\s*plus|\bplus\b|cabrio|alltrack|e[\s-]?golf|\bgte\b|\bgtd\b|"
                       r"golf\s*(?:7|8|vii|viii)\b|\bmk\s*[78]\b|\b1\.5\s*tsi\b|\betsi\b"),
-        "petrol_only": True,
         "gen_sure": RX(r"golf\s*(?:6|vi)\b|\bmk\s*6\b|\b1k\b|\b5k\b"),
         "gen_wrong": RX(r"golf\s*(?:7|vii|8|viii)\b|\bmk\s*[78]\b"),
     },
     "golf5gti": {
-        "label": "VW Golf 5 GTI",
-        "family": "golf",
+        "label": "VW Golf 5 GTI", "family": "golf", "petrol_only": True,
         "is_model": RX(r"\bgolf\b.*\bgti\b|\bgti\b.*\bgolf\b"),
         "exclude": RX(r"sportsvan|golf\s*plus|\bplus\b|cabrio|\bgtd\b|golf\s*(?:7|8|vii|viii)\b"),
-        "petrol_only": True,
         "gen_sure": RX(r"golf\s*(?:5|v)\b|\bmk\s*5\b|\b1k\b|edition\s*30|pirelli"),
         "gen_wrong": RX(r"golf\s*(?:7|vii|8|viii)\b|\bmk\s*[78]\b"),
     },
     "polo6": {
-        "label": "VW Polo 6",
-        "family": "polo",
+        "label": "VW Polo 6", "family": "polo", "petrol_only": False,
         "is_model": RX(r"\bpolo\b"),
         "exclude": RX(r"polo\s*(?:5|v|iv|4)\b|\b6r\b|\b6c\b|\b9n\d?\b|\bvivo\b|cross\s*polo"),
-        "petrol_only": False,
         "gen_sure": RX(r"polo\s*(?:6|vi)\b|\baw\b|\b2g\b|digital(?:e)?\s*cockpit|active\s*info\s*display"),
         "gen_wrong": RX(r"polo\s*(?:5|v)\b|\b6r\b|\b6c\b"),
     },
 }
 
-# années acceptées par modèle (modifiables dans config.json → "years")
-DEFAULT_YEARS = {"golf6": [2008, 2013], "golf5gti": [2004, 2009], "polo6": [2017, 2025]}
+# Réglages par modèle (modifiables dans config.json → "models")
+DEFAULT_PROFILES = {
+    "golf7":    {"years": [2017, 2020], "max_km": 160000, "budget": 19000, "vat_required": True},
+    "gti7":     {"years": [2017, 2020], "max_km": 160000, "budget": 22000, "vat_required": True},
+    "a3":       {"years": [2017, 2020], "max_km": 160000, "budget": 19000, "vat_required": True},
+    "golf6":    {"years": [2008, 2013], "max_km": 200000, "budget": 9000, "vat_required": False},
+    "golf5gti": {"years": [2004, 2009], "max_km": 200000, "budget": 9000, "vat_required": False},
+    "polo6":    {"years": [2017, 2025], "max_km": 200000, "budget": 9000, "vat_required": False},
+}
+
+
+def profile(model):
+    p = dict(DEFAULT_PROFILES[model])
+    p.update((CONFIG.get("models") or {}).get(model) or {})
+    return p
 
 
 def years_for(model):
-    return (CONFIG.get("years") or {}).get(model, DEFAULT_YEARS[model])
+    return profile(model)["years"]
 
 
 def family_years(family):
@@ -191,29 +250,39 @@ def family_years(family):
     return min(y[0] for y in ys), max(y[1] for y in ys)
 
 
+def family_max_km(family=None):
+    return max(profile(k)["max_km"] for k, m in MODELS.items() if family in (None, m["family"]))
+
+
 def model_budget(model):
-    return (CONFIG.get("max_price_ht_by_model") or {}).get(model, CONFIG["max_price_ht"])
+    return profile(model)["budget"]
 
 
-def search_budget_incl():
-    """Plafond TTC envoyé aux sites : le plus haut budget, TVA comprise, + 2 % de marge."""
-    top = max([CONFIG["max_price_ht"]] + list((CONFIG.get("max_price_ht_by_model") or {}).values()))
-    return int(top * (1 + CONFIG["vat_rate"]) * 1.02)
+def search_budget_incl(family=None):
+    """Plafond TTC envoyé aux sites pour une famille : budget HT le plus haut, TVA comprise, + 2 %."""
+    tops = [profile(k)["budget"] for k, m in MODELS.items() if family in (None, m["family"])]
+    return int(max(tops) * (1 + CONFIG["vat_rate"]) * 1.02)
 
 
 def classify(c):
     """Donne le modèle précis à partir de la famille de recherche, du titre et de l'année."""
     title = c.get("title", "")
-    fam = c.get("family") or ("polo" if re.search(r"\bpolo\b", title, re.I) else
-                              "golf" if re.search(r"\bgolf\b", title, re.I) else None)
+    fam = c.get("family")
+    if fam not in ("golf", "polo", "a3"):
+        fam = ("polo" if re.search(r"\bpolo\b", title, re.I) else "a3" if re.search(r"\ba3\b", title, re.I)
+               else "golf" if re.search(r"\bgolf\b", title, re.I) else None)
     c["family"] = fam
     if fam == "polo":
         return "polo6" if MODELS["polo6"]["is_model"].search(title) else None
+    if fam == "a3":
+        return "a3" if MODELS["a3"]["is_model"].search(title) else None
     if fam != "golf" or not re.search(r"\bgolf\b", title, re.I):
         return None
     blob = title + " " + (c.get("text") or "")[:3000]
     year = c.get("year") or 0
     is_gti = bool(re.search(r"\bgti\b", title, re.I))
+    if year >= 2014:
+        return "gti7" if is_gti else "golf7"
     golf6_hint = bool(MODELS["golf6"]["gen_sure"].search(blob)) and not re.search(r"golf\s*(?:5|v)\b|\bmk\s*5\b", blob, re.I)
     if is_gti and (year <= 2008 or (year == 2009 and not golf6_hint)):
         return "golf5gti"
@@ -254,6 +323,7 @@ def evaluate(c: dict) -> dict:
                  warnings=[], price_ht=None, cost=None)
         return c
     m = MODELS[model]
+    prof = profile(model)
 
     # Prix HT (si l'annonce le donne, sinon prix ÷ 1,21)
     price = c.get("price")
@@ -275,7 +345,7 @@ def evaluate(c: dict) -> dict:
         reasons.append("autre version/génération")
     if m["petrol_only"] and (DIESEL.search(title) or DIESEL.search(c.get("fuel") or "")):
         reasons.append("diesel")
-    lo, hi = years_for(model)
+    lo, hi = prof["years"]
     year = c.get("year")
     if year is None:
         warn.append("année inconnue")
@@ -283,7 +353,8 @@ def evaluate(c: dict) -> dict:
         reasons.append(f"année {year}")
     else:
         gen_ok = bool(m["gen_sure"].search(blob))
-        edge = {"golf6": year in (2008, 2012, 2013), "golf5gti": year == 2009, "polo6": year == 2017}[model]
+        edge = {"golf6": year in (2008, 2012, 2013), "golf5gti": year == 2009, "polo6": year == 2017,
+                "golf7": year in (2017, 2020), "gti7": year in (2017, 2020), "a3": year == 2020}[model]
         if edge and not gen_ok:
             warn.append("vérifier génération")
     checks["generation"] = "non" if "autre version/génération" in reasons else "ok"
@@ -292,7 +363,7 @@ def evaluate(c: dict) -> dict:
     km = c.get("km")
     if km is None:
         warn.append("km inconnu")
-    elif km > CONFIG["max_km"]:
+    elif km > prof["max_km"]:
         reasons.append(f"{km:,} km".replace(",", "."))
 
     # Boîte auto
@@ -311,11 +382,35 @@ def evaluate(c: dict) -> dict:
     if not roof:
         reasons.append("pas de toit ouvrant")
 
-    # TVA : un plus, pas une obligation. Elle décide du coût réel.
+    # Intérieur R-Line / S line (Golf 7.5 et A3 ; GTI : de série)
+    if "interior_yes" in m:
+        if m["interior_yes"].search(blob):
+            checks["interieur"] = "confirmé"
+        elif m["trim"].search(blob):
+            if m["interior_ext_only"].search(blob):
+                checks["interieur"] = "extérieur seul ?"
+                warn.append("intérieur à confirmer")
+            else:
+                checks["interieur"] = "probable"
+                if not CONFIG.get("interior_probable_ok"):
+                    warn.append("intérieur à confirmer")
+        else:
+            checks["interieur"] = "non"
+            reasons.append("pas R-Line/S line")
+
+    # TVA et coût réel
     tva = vat_status(c, blob)
     checks["tva"] = tva
-    budget = model_budget(model)
-    if tva == "récupérable":
+    budget = prof["budget"]
+    if prof["vat_required"]:
+        cost = price_ht
+        if tva == "marge":
+            reasons.append("TVA non récupérable (marge)")
+        elif tva == "particulier":
+            reasons.append("vendeur particulier (pas de TVA)")
+        elif tva == "non indiqué":
+            warn.append("TVA à confirmer")
+    elif tva == "récupérable":
         cost = price_ht
     elif tva in ("marge", "particulier"):
         cost = price
@@ -356,11 +451,11 @@ MP_SITES = {   # même API (Adevinta) pour les Pays-Bas et la Belgique
 }
 MP_SEARCH = "https://www.marktplaats.nl/lrp/api/search"
 MP_VIP = "https://app.marktplaats.nl/app/vip/v4/item/{}"
-MP_QUERIES = [("golf", "golf", 157), ("polo", "polo", 157)]  # (famille, requête, l2CategoryId Volkswagen)
+MP_QUERIES = [("golf", "golf", 157), ("polo", "polo", 157), ("a3", "a3", 93)]  # (famille, requête, l2CategoryId : 157 VW, 93 Audi)
 
 
-def mp_params(query, l2, offset, limit=100, years=None):
-    max_incl = search_budget_incl()
+def mp_params(query, l2, offset, limit=100, years=None, family=None):
+    max_incl = search_budget_incl(family)
     y0, y1 = years or (CONFIG.get("year_min", 2000), CONFIG.get("year_max", 2030))
     return [
         ("query", query), ("limit", str(limit)), ("offset", str(offset)),
@@ -368,7 +463,7 @@ def mp_params(query, l2, offset, limit=100, years=None):
         ("sortBy", "SORT_INDEX"), ("sortOrder", "DECREASING"),
         ("l1CategoryId", "91"), ("l2CategoryIds[]", str(l2)),
         ("attributeRanges[]", f"constructionYear:{y0}:{y1}"),
-        ("attributeRanges[]", f"mileage::{CONFIG['max_km']}"),
+        ("attributeRanges[]", f"mileage::{family_max_km(family)}"),
         ("attributeRanges[]", f"PriceCents::{max_incl * 100}"),
     ]
 
@@ -417,7 +512,7 @@ def mp_search(pages, site="Marktplaats"):
     results, ok = [], True
     for model, query, l2 in MP_QUERIES:
         for page in range(pages):
-            r = get(f"https://{S['host']}/lrp/api/search", params=mp_params(query, l2, page * 100, years=family_years(model)),
+            r = get(f"https://{S['host']}/lrp/api/search", params=mp_params(query, l2, page * 100, years=family_years(model), family=model),
                     headers={"Accept": "application/json, text/plain, */*",
                              "Referer": f"https://{S['host']}/", "Sec-Fetch-Mode": "cors",
                              "Sec-Fetch-Site": "same-origin"})
@@ -475,16 +570,16 @@ AS_SITES = {
     "AutoScout24.be": {"base": "https://www.autoscout24.be", "lst": "/nl", "cy": "B", "prefix": "asbe", "country": "BE"},
 }
 AS_BASE = "https://www.autoscout24.nl"
-AS_QUERIES = [("golf", "/lst/volkswagen/golf"), ("polo", "/lst/volkswagen/polo")]
+AS_QUERIES = [("golf", "/lst/volkswagen/golf"), ("polo", "/lst/volkswagen/polo"), ("a3", "/lst/audi/a3")]
 NEXT_RX = re.compile(r'<script[^>]+id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.S)
 
 
-def as_params(page, years=None, cy="NL"):
-    max_incl = search_budget_incl()
+def as_params(page, years=None, cy="NL", family=None):
+    max_incl = search_budget_incl(family)
     y0, y1 = years or (CONFIG.get("year_min", 2000), CONFIG.get("year_max", 2030))
     return {"atype": "C", "cy": cy, "ustate": "N,U", "damaged_listing": "exclude",
             "fregfrom": y0, "fregto": y1,
-            "kmto": CONFIG["max_km"], "priceto": max_incl, "gear": "A",
+            "kmto": family_max_km(family), "priceto": max_incl, "gear": "A",
             "sort": "age", "desc": "1", "page": page}
 
 
@@ -548,7 +643,7 @@ def as_search(pages, site="AutoScout24"):
     results, ok = [], True
     for model, path in AS_QUERIES:
         for page in range(1, pages + 1):
-            r = get(S["base"] + S["lst"] + path, params=as_params(page, years=family_years(model), cy=S["cy"]),
+            r = get(S["base"] + S["lst"] + path, params=as_params(page, years=family_years(model), cy=S["cy"], family=model),
                     headers={"Accept": "text/html"})
             if r is None or r.status_code != 200:
                 log(f"  {site} {model} p{page}: HTTP {getattr(r, 'status_code', 'ERR')}")
@@ -702,7 +797,8 @@ def notif_text(c, prefix):
         c.get("title", "")[:90],
         price_line(c) + deal_s,
         f"📅 {c.get('first_reg') or c.get('year')} · 🛣️ {fmt_eur(c.get('km'))} km",
-        f"Toit {ck.get('toit')} · Auto {ck.get('auto')} · TVA {ck.get('tva')}",
+        f"Toit {ck.get('toit')} · Auto {ck.get('auto')}" + (f" · Intérieur {ck['interieur']}" if ck.get("interieur") else "")
+        + f" · TVA {ck.get('tva')}",
     ]
     if c.get("warnings"):
         lines.append("⚠️ " + ", ".join(c["warnings"]))
@@ -759,7 +855,7 @@ def main():
         state = {"source_status": state.get("source_status", {})}
     state["search_id"] = sid
     first_run = not state.get("bootstrapped")
-    RULES_VERSION = 8
+    RULES_VERSION = 9
     if state.get("rules_version") != RULES_VERSION:
         state.pop("last_full_sweep", None)
         for c in db.values():
@@ -819,7 +915,11 @@ def main():
     if "sources_bootstrapped" not in state:
         state["sources_bootstrapped"] = ["Marktplaats", "AutoScout24"] if state.get("bootstrapped") else []
     new_sources = [s for s in all_sources if s not in state["sources_bootstrapped"]] if not first_run else []
-    budget = 450 if (first_run or new_sources) else CONFIG["max_details_per_run"]
+    # Modèles ajoutés après le démarrage : même principe
+    if "models_bootstrapped" not in state:
+        state["models_bootstrapped"] = ["golf6", "golf5gti", "polo6"] if state.get("bootstrapped") else []
+    new_models = [k for k in MODELS if k not in state["models_bootstrapped"]] if not first_run else []
+    budget = 450 if (first_run or new_sources or new_models) else CONFIG["max_details_per_run"]
     queue = []
     for c in db.values():
         if c.get("gone") or not c.get("needs_eval"):
@@ -882,7 +982,7 @@ def main():
         group = c.get("dup_group") or [c["uid"]]
         if st in CONFIG["notify_statuses"] and not any(u in notified for u in group):
             notified.add(c["uid"])
-            if not first_run and c.get("source") not in new_sources:
+            if not first_run and c.get("source") not in new_sources and c.get("model") not in new_models:
                 prefix = "✅ NOUVELLE ANNONCE" if st == "match" else "🟡 À VÉRIFIER"
                 msgs.append(notif_text(c, prefix))
         elif (CONFIG.get("notify_price_drops") and st in CONFIG["notify_statuses"] and c["uid"] in notified
@@ -901,8 +1001,21 @@ def main():
             whatsapp(f"{flag}{src} ajouté : {n_ok} annonces OK, {n_chk} à vérifier (sur {len(mine)} analysées).\n"
                      f"Elles sont dans le tableau ; les nouvelles t'arriveront ici.\n{CONFIG.get('dashboard_url') or ''}", dry)
             state["sources_bootstrapped"].append(src)
+    if new_models:
+        pending = [c for c in db.values() if not c.get("gone") and not c.get("detail_done") and c.get("needs_eval")]
+        if not pending:
+            live = [c for c in db.values() if not c.get("gone")]
+            parts = []
+            for k in new_models:
+                mine = [c for c in live if c.get("model") == k]
+                parts.append(f"{MODELS[k]['label']} : {sum(c.get('status') == 'match' for c in mine)} OK, "
+                             f"{sum(c.get('status') == 'a_verifier' for c in mine)} à vérifier")
+            whatsapp("🔁 Recherches ajoutées :\n" + "\n".join(parts) +
+                     f"\nElles sont dans le tableau ; les nouvelles t'arriveront ici.\n{CONFIG.get('dashboard_url') or ''}", dry)
+            state["models_bootstrapped"] = list(MODELS)
     if first_run:
         state["sources_bootstrapped"] = all_sources
+        state["models_bootstrapped"] = list(MODELS)
 
     if first_run and not bootstrapping:
         n_match = sum(1 for c in db.values() if c.get("status") == "match")
