@@ -3,127 +3,284 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Alerte Golf · Polo · A3</title>
+<title>Chasse aux occasions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f4f3ef; --card:#ffffff; --ink:#16181d; --muted:#6b6f78; --line:#e3e1da;
-  --ok:#14804a; --ok-bg:#e3f4ea; --warn:#9a6200; --warn-bg:#fdf1d8; --bad:#b4232c; --bad-bg:#fbe4e5;
-  --accent:#1f4fd1; --chip:#efeee9;
+  --road:#E9EDF1;        /* fond : gris route */
+  --sheet:#FFFFFF;       /* lignes d'annonces */
+  --ink:#16212C;         /* texte */
+  --muted:#5D6B78;
+  --rule:#D3DAE1;
+  --ok:#17784A;  --ok-soft:#E1F2E8;
+  --check:#A86300; --check-soft:#FBEFD9;
+  --off:#8C97A2;
+  --nl:#F7C600;          /* plaque néerlandaise */
+  --be:#B3121D;          /* lettres plaque belge */
+  --eu:#1F3F9A;          /* bande européenne */
+  --focus:#1F3F9A;
 }
 @media (prefers-color-scheme: dark){
-  :root{ --bg:#111317; --card:#1a1d23; --ink:#eceef2; --muted:#9298a3; --line:#2a2e36;
-    --ok:#4fd08a; --ok-bg:#13301f; --warn:#f2b84b; --warn-bg:#33270c; --bad:#ff7a80; --bad-bg:#3a1517;
-    --accent:#7aa2ff; --chip:#242830; }
+  :root:not([data-theme="light"]){
+    --road:#1B2128; --sheet:#232B34; --ink:#E8EDF2; --muted:#9AA7B3; --rule:#34404C;
+    --ok:#5BCB8E; --ok-soft:#1D3A2B; --check:#F0B04F; --check-soft:#3D2F14; --off:#6E7B87; --focus:#8EA9FF;
+  }
+}
+:root[data-theme="dark"]{
+  --road:#1B2128; --sheet:#232B34; --ink:#E8EDF2; --muted:#9AA7B3; --rule:#34404C;
+  --ok:#5BCB8E; --ok-soft:#1D3A2B; --check:#F0B04F; --check-soft:#3D2F14; --off:#6E7B87; --focus:#8EA9FF;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,sans-serif}
-header{padding:20px 16px 8px;max-width:1100px;margin:auto}
-h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
-.sub{color:var(--muted);font-size:13px}
-.stats{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;min-width:92px}
-.stat b{display:block;font:600 20px/1.2 "JetBrains Mono",monospace}
-.stat span{font-size:12px;color:var(--muted)}
-.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
-.controls{max-width:1100px;margin:auto;padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap}
-.seg{display:flex;flex-wrap:wrap;background:var(--chip);border-radius:10px;padding:3px}
-.seg button{border:0;background:none;color:var(--muted);font:500 13px Inter,sans-serif;padding:6px 10px;border-radius:8px;cursor:pointer}
-.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
-select{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:6px 8px;font:500 13px Inter,sans-serif}
-main{max-width:1100px;margin:auto;padding:12px 16px 40px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(310px,1fr))}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
-.card.gone{opacity:.5}
-.img{aspect-ratio:16/9;background:var(--chip) center/cover no-repeat}
-.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
-.top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
-.badge{font:600 11px Inter,sans-serif;padding:3px 8px;border-radius:99px;white-space:nowrap}
-.match{background:var(--ok-bg);color:var(--ok)} .a_verifier{background:var(--warn-bg);color:var(--warn)} .rejete{background:var(--bad-bg);color:var(--bad)}
-.title{font-weight:600;font-size:14px;line-height:1.3}
-.price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.price b{font:600 20px "JetBrains Mono",monospace}
-.price small{color:var(--muted)}
-.deal{font:600 12px Inter;padding:2px 6px;border-radius:6px}
-.deal.good{background:var(--ok-bg);color:var(--ok)} .deal.bad{background:var(--chip);color:var(--muted)}
-.meta{color:var(--muted);font-size:13px}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{font-size:12px;background:var(--chip);border-radius:7px;padding:3px 7px}
-.chip.y{color:var(--ok)} .chip.n{color:var(--bad)} .chip.q{color:var(--warn)}
-.note{font-size:12px;color:var(--warn)} .why{font-size:12px;color:var(--bad)}
-a.go{margin-top:auto;text-align:center;text-decoration:none;background:var(--accent);color:#fff;border-radius:10px;padding:9px;font-weight:600;font-size:14px}
-.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:50px 0}
-footer{max-width:1100px;margin:auto;padding:0 16px 30px;color:var(--muted);font-size:12px}
-footer a{color:var(--accent)}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--road);color:var(--ink);font:400 16px/1.45 Barlow,system-ui,sans-serif}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+
+/* ---------- En-tête ---------- */
+header{padding:32px 16px 14px}
+h1{font:700 clamp(34px,7vw,52px)/.95 "Barlow Condensed",sans-serif;letter-spacing:-.01em;margin:0}
+.scan{margin:8px 0 0;color:var(--muted);font-size:15px}
+.scan b{color:var(--ink);font-weight:600}
+.sources{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.src{font-size:13px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;
+     padding:3px 9px 3px 7px;border:1px solid var(--rule);border-radius:99px;background:var(--sheet)}
+.src i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.src.down i{background:var(--be)}
+details.crit{margin-top:12px;font-size:14px}
+details.crit summary{cursor:pointer;color:var(--muted)}
+.crit table{border-collapse:collapse;margin-top:8px;width:100%;max-width:640px;background:var(--sheet);border-radius:8px;overflow:hidden}
+.crit td,.crit th{padding:7px 10px;text-align:left;border-bottom:1px solid var(--rule);font-weight:400}
+.crit th{color:var(--muted);font-size:13px}
+.crit tr:last-child td{border-bottom:0}
+
+/* ---------- Plaques ---------- */
+.plate{display:inline-flex;align-items:stretch;height:22px;border-radius:4px;overflow:hidden;
+       font:700 15px/22px "Barlow Condensed",sans-serif;letter-spacing:.04em;vertical-align:middle;
+       border:1.5px solid #20262d}
+.plate .eu{background:var(--eu);color:#fff;font-size:10px;width:14px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px}
+.plate .txt{padding:0 7px}
+.plate.nl .txt{background:var(--nl);color:#111}
+.plate.be .txt{background:#fff;color:var(--be)}
+
+/* ---------- Barre de filtres ---------- */
+.bar{position:sticky;top:0;z-index:5;background:var(--road);border-bottom:1px solid var(--rule)}
+.bar .wrap{display:flex;flex-direction:column;gap:8px;padding-top:10px;padding-bottom:10px}
+.models{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.models::-webkit-scrollbar{display:none}
+.models button{flex:0 0 auto;font:600 17px/1 "Barlow Condensed",sans-serif;letter-spacing:.01em;
+  border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);padding:8px 12px;border-radius:6px;cursor:pointer}
+.models button[aria-pressed="true"]{background:var(--ink);color:var(--road);border-color:var(--ink)}
+.models button small{font:500 13px Barlow,sans-serif;opacity:.7;margin-left:4px}
+.row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;border:1.5px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--sheet)}
+.tabs button{border:0;background:none;color:var(--muted);font:500 14px Barlow,sans-serif;padding:7px 11px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--road)}
+select{font:500 14px Barlow,sans-serif;color:var(--ink);background:var(--sheet);border:1.5px solid var(--rule);border-radius:6px;padding:7px 8px}
+.count{margin-left:auto;color:var(--muted);font-size:14px}
+
+/* ---------- Annonces ---------- */
+main{padding:14px 0 30px}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+@media (min-width:860px){.list{grid-template-columns:1fr 1fr}}
+.ad{position:relative;display:grid;grid-template-columns:112px minmax(0,1fr);grid-template-areas:"thumb top" "rest rest";
+    gap:10px 12px;background:var(--sheet);border-radius:8px;padding:12px 12px 12px 14px;border-left:5px solid var(--off)}
+.ad .thumb{grid-area:thumb}
+.ad .top{grid-area:top}
+.ad .rest{grid-area:rest;min-width:0;display:flex;flex-direction:column;gap:8px}
+.ad.match{border-left-color:var(--ok)}
+.ad.a_verifier{border-left-color:var(--check)}
+.ad.rejete,.ad.gone{opacity:.62}
+.thumb{width:112px;height:84px;border-radius:5px;background:var(--rule) center/cover no-repeat;display:block}
+.top{min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:6px}
+.top .name{min-width:0}
+.model{font:700 20px/1.05 "Barlow Condensed",sans-serif;margin:0}
+.title{font-size:14px;color:var(--muted);margin:2px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.price{font:700 28px/1 "Barlow Condensed",sans-serif;white-space:nowrap}
+.price small{display:block;font:500 12.5px/1.3 Barlow,sans-serif;color:var(--muted);margin-top:3px}
+.specs{display:flex;flex-wrap:wrap;gap:4px 14px;margin:2px 0 0;padding:0;list-style:none;font-size:14px}
+.specs li b{font-weight:600}
+.specs .no{color:var(--be)}
+.verdict{font-size:14px;margin:0;padding:6px 9px;border-radius:5px}
+.match .verdict{background:var(--ok-soft);color:var(--ok)}
+.a_verifier .verdict{background:var(--check-soft);color:var(--check)}
+.rejete .verdict,.gone .verdict{background:transparent;padding:0;color:var(--muted)}
+.foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.foot .deal{color:var(--ok);font-weight:600}
+.open{margin-left:auto;font:600 15px Barlow,sans-serif;color:var(--ink);text-decoration:none;
+      border:1.5px solid var(--ink);border-radius:6px;padding:6px 12px}
+.open:hover{background:var(--ink);color:var(--road)}
+.new{font:700 13px "Barlow Condensed",sans-serif;letter-spacing:.03em;background:var(--nl);color:#111;border-radius:3px;padding:1px 6px}
+@media (max-width:520px){
+  .ad{grid-template-columns:96px minmax(0,1fr);padding-left:12px}
+  .thumb{width:96px;height:76px}
+}
+.more{display:block;margin:16px auto 0;font:600 15px Barlow,sans-serif;background:var(--sheet);color:var(--ink);
+      border:1.5px solid var(--rule);border-radius:6px;padding:9px 16px;cursor:pointer}
+.empty{background:var(--sheet);border-radius:8px;padding:28px 20px;color:var(--muted);text-align:center}
+footer{padding:6px 0 40px;color:var(--muted);font-size:14px}
+footer p{max-width:70ch;margin:6px 0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<header>
-  <h1>Golf 7.5 · A3 · Golf 6 · Golf 5 GTI · Polo 6</h1>
-  <div class="sub" id="sub">Chargement…</div>
-  <div class="stats" id="stats"></div>
+<header class="wrap">
+  <h1>Chasse aux occasions</h1>
+  <p class="scan" id="scan">Chargement de la base…</p>
+  <div class="sources" id="sources"></div>
+  <details class="crit" id="crit"><summary>Voir les critères de chaque recherche</summary><div id="critBody"></div></details>
 </header>
-<div class="bar"><div class="controls">
-  <div class="seg" id="fStatus">
-    <button data-v="ok" class="on">Bonnes</button><button data-v="match">OK seulement</button><button data-v="all">Tout</button>
+
+<nav class="bar" aria-label="Filtres">
+  <div class="wrap">
+    <div class="models" id="models" role="group" aria-label="Modèle"></div>
+    <div class="row2">
+      <div class="tabs" id="tabs" role="group" aria-label="Statut">
+        <button data-v="ok" aria-pressed="true">À regarder</button>
+        <button data-v="match" aria-pressed="false">Cochent tout</button>
+        <button data-v="all" aria-pressed="false">Tout</button>
+      </div>
+      <label><span class="visually-hidden" style="position:absolute;left:-9999px">Trier</span>
+        <select id="sort">
+          <option value="new">Plus récentes</option>
+          <option value="price">Moins chères</option>
+          <option value="deal">Meilleure affaire</option>
+          <option value="km">Moins de km</option>
+        </select>
+      </label>
+      <span class="count" id="count"></span>
+    </div>
   </div>
-  <div class="seg" id="fModel">
-    <button data-v="" class="on">Toutes</button><button data-v="golf7">Golf 7.5 R-Line</button><button data-v="gti7">GTI 7.5</button><button data-v="a3">A3</button><button data-v="golf6">Golf 6</button><button data-v="golf5gti">Golf 5 GTI</button><button data-v="polo6">Polo 6</button>
-  </div>
-  <select id="sort">
-    <option value="price">Coût ↑</option><option value="deal">Meilleure affaire</option>
-    <option value="km">Km ↑</option><option value="new">Plus récentes</option>
-  </select>
-</div></div>
-<main id="list"></main>
-<footer>Sources : Marktplaats.nl, AutoScout24.nl, 2dehands.be, AutoScout24.be · <a href="listings.csv">Télécharger en CSV (Excel)</a><br>
-Coût = prix HT si la TVA est récupérable (⭐), sinon prix affiché (marge ou particulier). Toujours confirmer la TVA et le prix export (hors rest-BPM) avec le vendeur.</footer>
+</nav>
+
+<main class="wrap">
+  <ul class="list" id="list"></ul>
+  <button class="more" id="more" hidden>Afficher plus</button>
+</main>
+
+<footer class="wrap">
+  <p>Prix en gras : ce que la voiture te coûte vraiment. Hors TVA quand la TVA est récupérable, sinon le prix affiché (vente en marge ou par un particulier).</p>
+  <p>Avant d'acheter, confirme toujours la TVA, l'intérieur et le prix export avec le vendeur. <a href="listings.csv">Télécharger toute la base (CSV pour Excel)</a></p>
+</footer>
+
 <script>
 const $ = s => document.querySelector(s);
-const esc = s => String(s??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const safeUrl = u => /^https:\/\//.test(u||'') ? esc(u) : '#';
-const eur = v => v ? v.toLocaleString('fr-BE') + ' €' : '?';
-let DATA = [], st = {status:'ok', model:'', sort:'price'};
-function seg(id,key){ document.querySelectorAll(`#${id} button`).forEach(b=>b.onclick=()=>{
-  document.querySelectorAll(`#${id} button`).forEach(x=>x.classList.remove('on')); b.classList.add('on');
-  st[key]=b.dataset.v; render(); }); }
-seg('fStatus','status'); seg('fModel','model'); $('#sort').onchange=e=>{st.sort=e.target.value;render();};
-const LBL={match:'✅ OK',a_verifier:'🟡 À vérifier',rejete:'Écartée'};
-function chip(label,val){
-  const cls = /^(oui|confirmé|récupérable|ok)$/.test(val)?'y':(/^non$/.test(val)?'n':'q');
-  return `<span class="chip ${cls}">${label} : ${val??'?'}</span>`; }
-function render(){
-  let rows = DATA.filter(c=>!c.gone || st.status==='all');
-  if(st.status==='ok') rows=rows.filter(c=>c.status!=='rejete');
-  if(st.status==='match') rows=rows.filter(c=>c.status==='match');
-  if(st.model) rows=rows.filter(c=>c.model===st.model);
-  const k={price:c=>c.cost??c.price??1e9, deal:c=>c.deal_pct??999, km:c=>c.km??1e9, new:c=>-Date.parse(c.first_seen||0)}[st.sort];
-  rows.sort((a,b)=>k(a)-k(b));
-  $('#list').innerHTML = rows.length ? rows.map(c=>{
-    const ck=c.checks||{}, d=c.deal_pct;
-    return `<article class="card ${c.gone?'gone':''}">
-      ${c.image&&/^https:\/\//.test(c.image)?`<div class="img" style="background-image:url('${encodeURI(c.image)}')"></div>`:''}
-      <div class="body">
-        <div class="top"><div class="title">${esc(c.title)}</div><span class="badge ${c.status}">${c.gone?'Disparue':LBL[c.status]}</span></div>
-        <div class="price"><b>${eur(ck.tva==='récupérable'?(c.cost??c.price_ht):c.price)}</b><small>${ck.tva==='récupérable'?'HT ⭐ · '+eur(c.price)+' TTC':(ck.tva==='marge'||ck.tva==='particulier'?'prix final ('+esc(ck.tva)+')':'TTC · TVA ?')}</small>
-          ${d!=null?`<span class="deal ${d<0?'good':'bad'}">${d>0?'+':''}${d}% vs comparables</span>`:''}
-          ${c.prev_price&&c.price<c.prev_price?`<span class="deal good">📉 était ${eur(c.prev_price)}</span>`:''}</div>
-        <div class="meta">${[c.first_reg||c.year||'?', c.km?c.km.toLocaleString('fr-BE')+' km':'? km', ({BE:'🇧🇪 ',NL:'🇳🇱 '}[c.country||'NL']||'')+esc(c.city), c.source+(c.also_on&&c.also_on.length?' (+'+c.also_on.join(', ')+')':'')].filter(Boolean).join(' · ')}</div>
-        <div class="chips">${chip('Auto',esc(ck.auto))}${chip('Toit',ck.toit)}${ck.interieur?chip('Intérieur',esc(ck.interieur)):''}${chip('TVA',ck.tva)}</div>
-        ${c.warnings&&c.warnings.length?`<div class="note">⚠️ ${esc(c.warnings.join(' · '))}</div>`:''}
-        ${c.status==='rejete'&&c.reasons?`<div class="why">✗ ${esc(c.reasons.join(' · '))}</div>`:''}
-        <a class="go" href="${safeUrl(c.url)}" target="_blank" rel="noopener">Voir l'annonce</a>
-      </div></article>`;}).join('') : '<div class="empty">Aucune annonce pour ces filtres.</div>';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const safeUrl = u => /^https:\/\//.test(u || '') ? esc(u) : '#';
+const n = v => v == null ? '?' : Number(v).toLocaleString('fr-BE');
+const NAMES = {golf7:'Golf 7.5 R-Line', gti7:'Golf 7.5 GTI', a3:'Audi A3 S line', golf6:'Golf 6', golf5gti:'Golf 5 GTI', polo6:'Polo 6'};
+const ORDER = ['golf7','gti7','a3','golf6','golf5gti','polo6'];
+const PAGE = 40;
+let DATA = [], CONF = {}, st = {model:'', status:'ok', sort:'new', shown:PAGE};
+
+function ago(iso){
+  const h = (Date.now() - Date.parse(iso)) / 36e5;
+  if (h < 1) return 'il y a ' + Math.max(1, Math.round(h * 60)) + ' min';
+  if (h < 48) return 'il y a ' + Math.round(h) + ' h';
+  return 'il y a ' + Math.round(h / 24) + ' jours';
 }
-fetch('listings.json?'+Date.now()).then(r=>r.json()).then(j=>{
-  DATA=j.listings||[];
-  const live=DATA.filter(c=>!c.gone);
-  const n=s=>live.filter(c=>c.status===s).length;
-  $('#sub').textContent='Mis à jour '+new Date(j.updated).toLocaleString('fr-BE')+' · auto + toit ouvrant · budgets par modèle dans config.json';
-  const src=Object.entries(j.sources||{}).map(([k,v])=>`<div class="stat"><b>${v.ok?'●':'○'} ${v.last_count??0}</b><span>${k}${v.ok?'':' (bloqué ?)'}</span></div>`).join('');
-  $('#stats').innerHTML=`<div class="stat"><b>${n('match')}</b><span>OK</span></div><div class="stat"><b>${n('a_verifier')}</b><span>À vérifier</span></div><div class="stat"><b>${live.length}</b><span>Analysées</span></div>`+src;
-  render();
-}).catch(()=>{$('#sub').textContent="Pas encore de données : le premier scan n'a pas tourné.";});
+function plate(c){
+  const be = c.country === 'BE';
+  return `<span class="plate ${be ? 'be' : 'nl'}" title="${be ? 'Belgique' : 'Pays-Bas'}"><span class="eu">${be ? 'B' : 'NL'}</span><span class="txt">${esc(c.city || (be ? 'Belgique' : 'Pays-Bas'))}</span></span>`;
+}
+function priceBlock(c){
+  const t = (c.checks || {}).tva;
+  if (t === 'récupérable') return `${n(c.cost ?? c.price_ht)} €<small>hors TVA, TVA récupérable<br>${n(c.price)} € TVAC affiché</small>`;
+  if (t === 'marge') return `${n(c.price)} €<small>prix final, vente en marge</small>`;
+  if (t === 'particulier') return `${n(c.price)} €<small>prix final, particulier</small>`;
+  return `${n(c.price)} €<small>TVA non précisée</small>`;
+}
+function verdict(c){
+  if (c.gone) return 'Annonce retirée';
+  if (c.status === 'match') return 'Coche tous tes critères';
+  if (c.status === 'a_verifier') return 'À vérifier : ' + esc((c.warnings || []).join(', '));
+  return 'Écartée : ' + esc((c.reasons || []).join(', '));
+}
+function specs(c){
+  const k = c.checks || {}, yn = v => v === 'oui' ? 'oui' : `<span class="no">${esc(v || '?')}</span>`;
+  const items = [
+    `<li><b>${esc(c.first_reg || c.year || '?')}</b></li>`,
+    `<li><b>${n(c.km)}</b> km</li>`,
+    `<li>Boîte auto ${yn(k.auto)}</li>`,
+    `<li>Toit ouvrant ${yn(k.toit)}</li>`];
+  if (k.interieur) items.push(`<li>Intérieur ${k.interieur === 'non' ? '<span class="no">non</span>' : esc(k.interieur)}</li>`);
+  return `<ul class="specs">${items.join('')}</ul>`;
+}
+function card(c){
+  const isNew = c.first_seen && (Date.now() - Date.parse(c.first_seen)) < 864e5;
+  const d = c.deal_pct;
+  const deal = d != null && d <= -5 ? `<span class="deal">${-d} % sous les annonces comparables</span>` : '';
+  const drop = c.prev_price && c.price < c.prev_price ? `<span class="deal">Baisse de prix : était ${n(c.prev_price)} €</span>` : '';
+  const img = c.image && /^https:\/\//.test(c.image) ? ` style="background-image:url('${encodeURI(c.image)}')"` : '';
+  return `<li class="ad ${c.gone ? 'gone' : esc(c.status)}">
+    <a class="thumb" href="${safeUrl(c.url)}" target="_blank" rel="noopener"${img} aria-label="Photo de l'annonce"></a>
+    <div class="top">
+      <div class="name">
+        <h2 class="model">${esc(NAMES[c.model] || c.model || '')} ${isNew ? '<span class="new">Nouveau</span>' : ''}</h2>
+        <p class="title" title="${esc(c.title)}">${esc(c.title)}</p>
+      </div>
+      <div class="price">${priceBlock(c)}</div>
+    </div>
+    <div class="rest">
+      ${specs(c)}
+      ${c.status === 'match' && !c.gone ? '' : `<p class="verdict">${verdict(c)}</p>`}
+      <div class="foot">${plate(c)}<span>${esc(c.source)}${c.also_on && c.also_on.length ? ' et ' + esc(c.also_on.join(', ')) : ''}</span>${deal}${drop}
+        <a class="open" href="${safeUrl(c.url)}" target="_blank" rel="noopener">Ouvrir l'annonce</a></div>
+    </div>
+  </li>`;
+}
+function filtered(){
+  let r = DATA.filter(c => st.status === 'all' || !c.gone);
+  if (st.status === 'ok') r = r.filter(c => c.status === 'match' || c.status === 'a_verifier');
+  if (st.status === 'match') r = r.filter(c => c.status === 'match');
+  if (st.model) r = r.filter(c => c.model === st.model);
+  const key = {
+    new: c => -Date.parse(c.first_seen || 0),
+    price: c => c.cost ?? c.price ?? 1e9,
+    deal: c => c.deal_pct ?? 999,
+    km: c => c.km ?? 1e9}[st.sort];
+  const rank = c => ({match:0, a_verifier:1}[c.status] ?? 2);
+  return r.sort((a, b) => rank(a) - rank(b) || key(a) - key(b));
+}
+function render(){
+  const rows = filtered();
+  $('#count').textContent = rows.length + (rows.length > 1 ? ' annonces' : ' annonce');
+  $('#list').innerHTML = rows.length ? rows.slice(0, st.shown).map(card).join('')
+    : `<li class="empty">Rien pour ce filtre en ce moment. Essaie « Tout » ou un autre modèle : la base est mise à jour à chaque scan.</li>`;
+  $('#more').hidden = rows.length <= st.shown;
+}
+function renderModels(){
+  const live = DATA.filter(c => !c.gone && (c.status === 'match' || c.status === 'a_verifier'));
+  const cnt = m => live.filter(c => !m || c.model === m).length;
+  const btn = (m, label) => `<button data-v="${m}" aria-pressed="${st.model === m}">${label}<small>${cnt(m)}</small></button>`;
+  $('#models').innerHTML = btn('', 'Tous') + ORDER.filter(m => DATA.some(c => c.model === m)).map(m => btn(m, NAMES[m])).join('');
+  $('#models').querySelectorAll('button').forEach(b => b.onclick = () => { st.model = b.dataset.v; st.shown = PAGE; renderModels(); render(); });
+}
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  st.status = b.dataset.v; st.shown = PAGE; render();
+});
+$('#sort').onchange = e => { st.sort = e.target.value; render(); };
+$('#more').onclick = () => { st.shown += PAGE; render(); };
+
+fetch('listings.json?' + Date.now()).then(r => r.json()).then(j => {
+  DATA = j.listings || []; CONF = j.config || {};
+  const live = DATA.filter(c => !c.gone);
+  const ok = live.filter(c => c.status === 'match').length, chk = live.filter(c => c.status === 'a_verifier').length;
+  $('#scan').innerHTML = `Dernier scan ${ago(j.updated)}. <b>${ok}</b> voiture${ok > 1 ? 's cochent' : ' coche'} tout, <b>${chk}</b> à vérifier, sur ${n(live.length)} annonces lues aux Pays-Bas et en Belgique.`;
+  $('#sources').innerHTML = Object.entries(j.sources || {}).map(([k, v]) =>
+    `<span class="src ${v.ok ? '' : 'down'}" title="${v.ok ? 'Répond' : 'Ne répond plus'}"><i></i>${esc(k)}${v.ok ? '' : ' ne répond plus'}</span>`).join('');
+  const models = CONF.models || {};
+  if (Object.keys(models).length) {
+    $('#critBody').innerHTML = `<table><tr><th>Modèle</th><th>Années</th><th>Km max</th><th>Budget</th></tr>` +
+      ORDER.filter(m => models[m]).map(m => { const p = models[m];
+        return `<tr><td>${NAMES[m]}</td><td>${p.years[0]}–${p.years[1]}</td><td>${n(p.max_km)}</td><td>${n(p.budget)} € ${p.vat_required ? 'HT, TVA récupérable obligatoire' : '(HT si TVA récupérable)'}</td></tr>`; }).join('') +
+      `</table><p style="margin:8px 0 0;color:var(--muted)">Toutes : boîte automatique et toit ouvrant.</p>`;
+  } else $('#crit').hidden = true;
+  renderModels(); render();
+}).catch(() => { $('#scan').textContent = "La base n'est pas encore disponible : le premier scan n'a pas fini."; });
 </script>
 </body>
 </html>
