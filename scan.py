@@ -218,7 +218,9 @@ MODELS = {
     "polo6": {
         "label": "VW Polo 6", "family": "polo", "petrol_only": False,
         "is_model": RX(r"\bpolo\b"),
-        "exclude": RX(r"polo\s*(?:5|v|iv|4)\b|\b6r\b|\b6c\b|\b9n\d?\b|\bvivo\b|cross\s*polo"),
+        # 1.2 TSI, 1.4 TDI et 1.8 TSI GTI n'existent que sur la Polo 5
+        "exclude": RX(r"polo\s*(?:5|v|iv|4)\b|\b6r\b|\b6c\b|\b9n\d?\b|\bvivo\b|cross\s*polo|"
+                      r"\b1\.2\s*tsi\b|\b1\.4\s*(?:cr\s*)?tdi\b|\b1\.2\s*tdi\b|\b1\.8\s*tsi\b"),
         "gen_sure": RX(r"polo\s*(?:6|vi)\b|\baw\b|\b2g\b|digital(?:e)?\s*cockpit|active\s*info\s*display"),
         "gen_wrong": RX(r"polo\s*(?:5|v)\b|\b6r\b|\b6c\b"),
     },
@@ -855,7 +857,7 @@ def main():
         state = {"source_status": state.get("source_status", {})}
     state["search_id"] = sid
     first_run = not state.get("bootstrapped")
-    RULES_VERSION = 9
+    RULES_VERSION = 10
     if state.get("rules_version") != RULES_VERSION:
         state.pop("last_full_sweep", None)
         for c in db.values():

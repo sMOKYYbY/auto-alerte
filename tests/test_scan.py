@@ -338,3 +338,10 @@ def test_unreadable_listing_does_not_block_bootstrap(tmp_path, monkeypatch):
     assert set(st["models_bootstrapped"]) == set(scan.MODELS)
     c = json.loads((tmp_path / "data" / "db.json").read_text())["as:x"]
     assert c["status"] == "a_verifier" and "fiche illisible" in c["warnings"]
+
+
+def test_polo5_engines_not_taken_for_polo6():
+    for t in ["Volkswagen Polo 1.2 TSI 66KW DSG 2017", "Volkswagen Polo 1.4 CR TDi Comfortline BMT DSG",
+              "Volkswagen Polo 1.8 TSI GTI Panoramadak"]:
+        c = scan.evaluate(base(family="polo", title=t + " schuifdak", year=2018, text="Marge"))
+        assert c["status"] == "rejete" and "autre version/génération" in c["reasons"], t
