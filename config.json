@@ -68,7 +68,7 @@
   "notify_price_drops": true,
   "pages_quick_scan": 3,
   "full_sweep_every_hours": 6,
-  "max_details_per_run": 120,
+  "max_details_per_run": 300,
   "request_delay_sec": [
     1.5,
     3.5

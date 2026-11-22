@@ -109,6 +109,28 @@ def clean_text(s: str) -> str:
     return s.encode("utf-8", errors="replace").decode("utf-8")
 
 
+def key_snippets(text: str, limit: int = 1500) -> str:
+    """Garde seulement les passages qui servent aux règles (toit, boîte, TVA, finition, état, génération)."""
+    if not text or len(text) <= limit:
+        return text or ""
+    pats = [ROOF, AUTO, MANUAL, VAT_FIELD, VAT_YES, VAT_NO, DIESEL, DAMAGE, TUNED, R_LINE_INTERIOR, S_LINE_INTERIOR,
+            RX(r"r[\s-]?line|s[\s-]?line|\bgti\b|exterieur|interieur")] + EXCL_PRICE
+    pats += [m["gen_sure"] for m in MODELS.values()] + [m["gen_wrong"] for m in MODELS.values()]
+    spans = []
+    for rx in pats:
+        for mm in rx.finditer(text):
+            spans.append((max(0, mm.start() - 70), min(len(text), mm.end() + 70)))
+    spans.sort()
+    merged = []
+    for a, b in spans:
+        if merged and a <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], b))
+        else:
+            merged.append((a, b))
+    out = " … ".join(text[a:b].replace("\n", " ") for a, b in merged)
+    return out[:limit]
+
+
 def strip_html(s: str) -> str:
     s = re.sub(r"<br\s*/?>|</p>|</li>", "\n", s, flags=re.I)
     return re.sub(r"<[^>]+>", " ", s)
@@ -861,8 +883,8 @@ def main():
     if state.get("rules_version") != RULES_VERSION:
         state.pop("last_full_sweep", None)
         for c in db.values():
-            if c.get("status") in ("match", "a_verifier") or not c.get("detail_done") or not c.get("text"):
-                c["detail_done"] = False
+            if c.get("detail_done") and not c.get("text") and not c.get("gone"):
+                c["detail_done"] = False        # texte effacé par une ancienne version : à relire une fois
             c["needs_eval"] = True          # toutes les annonces sont réévaluées avec les nouvelles règles
         state["rules_version"] = RULES_VERSION
 
@@ -1059,8 +1081,10 @@ def main():
     # Allège la base : texte complet seulement pour les annonces encore pertinentes
     for c in db.values():
         soft = [r for r in c.get("reasons", []) if not r.startswith("budget")]
-        if c.get("detail_done") and (soft or c.get("gone")):
+        if c.get("gone"):
             c["text"] = ""
+        elif c.get("detail_done") and soft:
+            c["text"] = key_snippets(c.get("text") or "")      # assez pour réévaluer sans relire la fiche
         else:
             c["text"] = (c.get("text") or "")[:5000]
     state["last_run"] = NOW_ISO

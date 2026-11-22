@@ -379,3 +379,13 @@ def test_rule_change_reevaluates_rejected_listings(tmp_path, monkeypatch):
     scan.main()
     c = json.loads((tmp_path / "data" / "db.json").read_text())["2d:p1"]
     assert c["status"] == "match" and any("Polo 6" in m for m in sent), (c["status"], sent)
+
+
+def test_key_snippets_keep_what_rules_need():
+    long = ("Mooie auto, altijd onderhouden. " * 80 + "Panoramadak, DSG automaat. " + "Lorem ipsum. " * 80 +
+            "BTW/marge: Marge, de BTW is niet aftrekbaar. " + "Nog meer tekst. " * 80 + "R-Line interieur.")
+    k = scan.key_snippets(long)
+    assert len(k) <= 1500
+    c = scan.evaluate(base(title="Volkswagen Golf 1.5 TSI R-Line", year=2018, km=90000, price=17000, text=k))
+    assert c["checks"]["toit"] == "oui" and c["checks"]["auto"] == "oui" and c["checks"]["tva"] == "marge"
+    assert c["checks"]["interieur"] == "confirmé"
