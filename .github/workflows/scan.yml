@@ -46,5 +46,10 @@ jobs:
           git config user.email "auto-alerte-bot@users.noreply.github.com"
           git add data docs
           git diff --cached --quiet || git commit -m "scan $(date -u +%Y-%m-%dT%H:%MZ)"
-          git pull --rebase --autostash || true
-          git push
+          # Si un autre passage a sauvegardé entre-temps, nos données (les plus récentes) gagnent
+          for i in 1 2 3; do
+            git pull --rebase -X theirs --autostash origin main || { git rebase --abort; git pull --no-rebase -X ours origin main; }
+            git push && exit 0
+            sleep 5
+          done
+          exit 1
