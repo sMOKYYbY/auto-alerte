@@ -276,8 +276,8 @@ fetch('listings.json?' + Date.now()).then(r => r.json()).then(j => {
   if (Object.keys(models).length) {
     $('#critBody').innerHTML = `<table><tr><th>Modèle</th><th>Années</th><th>Km max</th><th>Budget</th></tr>` +
       ORDER.filter(m => models[m]).map(m => { const p = models[m];
-        return `<tr><td>${NAMES[m]}</td><td>${p.years[0]}–${p.years[1]}</td><td>${n(p.max_km)}</td><td>${n(p.budget)} € ${p.vat_required ? 'HT, TVA récupérable obligatoire' : '(HT si TVA récupérable)'}</td></tr>`; }).join('') +
-      `</table><p style="margin:8px 0 0;color:var(--muted)">Toutes : boîte automatique et toit ouvrant.</p>`;
+        return `<tr><td>${NAMES[m]}</td><td>${p.years[0]}–${p.years[1]}</td><td>${n(p.max_km)}</td><td>${n(p.budget)} € ${p.vat_required ? 'HT, TVA récupérable obligatoire' : '(HT si TVA récupérable)'}${p.roof_required === false ? ', toit ouvrant pas obligatoire' : ''}</td></tr>`; }).join('') +
+      `</table><p style="margin:8px 0 0;color:var(--muted)">Toutes : boîte automatique. Toit ouvrant obligatoire sauf mention contraire.</p>`;
   } else $('#crit').hidden = true;
   renderModels(); render();
 }).catch(() => { $('#scan').textContent = "La base n'est pas encore disponible : le premier scan n'a pas fini."; });

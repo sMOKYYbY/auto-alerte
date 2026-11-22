@@ -233,7 +233,7 @@ DEFAULT_PROFILES = {
     "a3":       {"years": [2017, 2020], "max_km": 160000, "budget": 19000, "vat_required": True},
     "golf6":    {"years": [2008, 2013], "max_km": 200000, "budget": 9000, "vat_required": False},
     "golf5gti": {"years": [2004, 2009], "max_km": 200000, "budget": 9000, "vat_required": False},
-    "polo6":    {"years": [2017, 2025], "max_km": 200000, "budget": 9000, "vat_required": False},
+    "polo6":    {"years": [2017, 2025], "max_km": 200000, "budget": 9000, "vat_required": False, "roof_required": False},
 }
 
 
@@ -381,7 +381,7 @@ def evaluate(c: dict) -> dict:
     # Toit ouvrant
     roof = bool(ROOF.search(blob))
     checks["toit"] = "oui" if roof else "non"
-    if not roof:
+    if not roof and prof.get("roof_required", True):
         reasons.append("pas de toit ouvrant")
 
     # Intérieur R-Line / S line (Golf 7.5 et A3 ; GTI : de série)
@@ -857,13 +857,13 @@ def main():
         state = {"source_status": state.get("source_status", {})}
     state["search_id"] = sid
     first_run = not state.get("bootstrapped")
-    RULES_VERSION = 10
+    RULES_VERSION = 11
     if state.get("rules_version") != RULES_VERSION:
         state.pop("last_full_sweep", None)
         for c in db.values():
             if c.get("status") in ("match", "a_verifier") or not c.get("detail_done") or not c.get("text"):
                 c["detail_done"] = False
-                c["needs_eval"] = True
+            c["needs_eval"] = True          # toutes les annonces sont réévaluées avec les nouvelles règles
         state["rules_version"] = RULES_VERSION
 
     last_full = state.get("last_full_sweep")

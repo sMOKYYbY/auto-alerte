@@ -55,10 +55,11 @@
       ],
       "max_km": 200000,
       "budget": 9000,
-      "vat_required": false
+      "vat_required": false,
+      "roof_required": false
     }
   },
-  "_models_aide": "budget = prix HT max si vat_required (TVA récupérable obligatoire), sinon coût max (HT si TVA récupérable, sinon prix affiché)",
+  "_models_aide": "budget = prix HT max si vat_required (TVA récupérable obligatoire), sinon coût max (HT si TVA récupérable, sinon prix affiché) ; roof_required false = toit ouvrant pas obligatoire",
   "interior_probable_ok": true,
   "notify_statuses": [
     "match",

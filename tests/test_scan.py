@@ -345,3 +345,37 @@ def test_polo5_engines_not_taken_for_polo6():
               "Volkswagen Polo 1.8 TSI GTI Panoramadak"]:
         c = scan.evaluate(base(family="polo", title=t + " schuifdak", year=2018, text="Marge"))
         assert c["status"] == "rejete" and "autre version/génération" in c["reasons"], t
+
+
+def test_polo_roof_optional():
+    c = scan.evaluate(base(family="polo", title="Volkswagen Polo 1.0 TSI Highline DSG", year=2019, price=5750, text="Marge"))
+    assert c["status"] == "match" and c["checks"]["toit"] == "non"
+    g = scan.evaluate(base(title="Volkswagen Golf 1.4 TSI DSG", year=2011, text="Marge"))
+    assert "pas de toit ouvrant" in g["reasons"]          # toujours obligatoire pour la Golf
+
+
+def test_rule_change_reevaluates_rejected_listings(tmp_path, monkeypatch):
+    monkeypatch.setattr(scan, "DATA", tmp_path / "data")
+    monkeypatch.setattr(scan, "DOCS", tmp_path / "docs")
+    monkeypatch.setattr(scan, "pause", lambda: None)
+    sent = []
+    monkeypatch.setattr(scan, "whatsapp", lambda t, dry=False: sent.append(t) or True)
+    (tmp_path / "data").mkdir()
+    polo = {"uid": "2d:p1", "source": "2dehands", "country": "BE", "id": "p1", "model": "polo6", "family": "polo",
+            "title": "Volkswagen Polo 1.0 TSI Highline DSG", "url": "https://x/p1", "price": 5750, "km": 142742,
+            "year": 2019, "transmission": "Automaat", "text": "Marge, Benzine", "detail_done": True,
+            "needs_eval": False, "status": "rejete", "reasons": ["pas de toit ouvrant"], "checks": {},
+            "first_seen": "2026-11-12", "last_seen": scan.NOW_ISO}
+    (tmp_path / "data" / "db.json").write_text(json.dumps({"2d:p1": polo}))
+    srcs = list(scan.MP_SITES) + list(scan.AS_SITES)
+    (tmp_path / "data" / "state.json").write_text(json.dumps({
+        "bootstrapped": True, "search_id": scan.CONFIG["search_id"], "rules_version": 10,
+        "sources_bootstrapped": srcs, "models_bootstrapped": list(scan.MODELS),
+        "source_status": {s: {"ok": True} for s in srcs}}))
+    monkeypatch.setattr(scan, "mp_search", lambda pages, site=None: ([dict(polo)] if site == "2dehands" else [], True))
+    monkeypatch.setattr(scan, "as_search", lambda pages, site=None: ([], True))
+    monkeypatch.setattr(scan, "mp_detail", lambda c: "Marge, Benzine, DSG")
+    monkeypatch.setattr(scan.sys, "argv", ["scan.py"])
+    scan.main()
+    c = json.loads((tmp_path / "data" / "db.json").read_text())["2d:p1"]
+    assert c["status"] == "match" and any("Polo 6" in m for m in sent), (c["status"], sent)
