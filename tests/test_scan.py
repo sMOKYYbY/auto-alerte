@@ -432,3 +432,15 @@ def test_real_config_golf6_gti_rules():
                               text="Marge"))["reasons"] == ["recherche arrêtée"]
     c5 = scan.evaluate(base(title="Volkswagen Golf 2.0 TFSI GTI DSG", year=2007, price=7500, text="Marge"))
     assert c5["model"] == "golf5gti" and c5["status"] == "match"
+
+
+def test_fake_gti_and_tuned_power():
+    for t, y in [("Golf 4 GTI US USA 132kw 180cv boite auto", 2005),
+                 ("Volkswagen Golf 1.6 FSI Automaat / GTI pakket / Sterrenhemel", 2005),
+                 ("Volkswagen GOLF 1.4 TSI GTI Highline l AUTOMAAT", 2013)]:
+        c = scan.evaluate(base(title=t, year=y, price=5000, text="Marge"))
+        assert c["status"] == "rejete", t
+    c = scan.evaluate(base(title="Volkswagen Golf 2.0 GTI 298PK DSG 2010 Blauw", year=2010, price=8500, text="Marge"))
+    assert "moteur modifié" in c["warnings"]
+    ok = scan.evaluate(base(title="Volkswagen Golf 2.0 GTI 155KW DSG 2010 Grijs", year=2010, price=9000, text="211 pk"))
+    assert "moteur modifié" not in ok["warnings"]

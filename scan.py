@@ -165,7 +165,7 @@ DAMAGE = RX(r"pour\s*pi[èe]ces|moteur\s*(?:hs|cass[ée])|bo[iî]te\s*(?:hs|cass
             r"versnellingsbak\s*(?:defect|kapot)|bak\s*(?:defect|kapot)|\bdefect\b|schade\s*auto|schadeauto|"
             r"start\s*niet|rijdt\s*niet|loopt\s*niet|voor\s*onderdelen|export\s*only|alleen\s*export|"
             r"ketting\s*(?:hoorbaar|rammelt|ratelt)|mechatronic\w*\s*(?:defect|kapot)")
-TUNED = RX(r"stage\s*[123]\b|\bremap\b|chip\s*tun\w*|getuned|\b[34]\d{2}\s*\+?\s*pk\b")
+TUNED = RX(r"stage\s*[123]\b|\bremap\b|chip\s*tun\w*|getuned|gechipt|\b(?:2[6-9]\d|[34]\d{2})\s*\+?\s*(?:pk|ch|cv|hp)\b")
 DIESEL = RX(r"\btdi\b|\bgtd\b|diesel|\bblue\s*tdi\b")
 NO_GEN = RX(r"$^")
 
@@ -233,15 +233,17 @@ MODELS = {
     "golf6gti": {
         "label": "VW Golf 6 GTI", "family": "golf", "petrol_only": True,
         "is_model": RX(r"\bgolf\b.*\bgti\b|\bgti\b.*\bgolf\b"),
-        "exclude": RX(r"sportsvan|golf\s*plus|\bplus\b|cabrio|\bgtd\b|\bgte\b|golf\s*(?:7|8|vii|viii)\b|\bmk\s*[78]\b|"
-                      r"variant"),
+        # pas une vraie GTI : « pack GTI », autre moteur que le 2.0, Golf 4 / 7 / 8
+        "exclude": RX(r"gti[\s-]*(?:pakket|pack|look|style|uitvoering|line)|\b1\.[2-9]\s*(?:tsi|fsi|tdi|mpi|i)?\b|golf\s*(?:4|iv)\b|\bmk\s*4\b|sportsvan|golf\s*plus|\bplus\b|cabrio|\bgtd\b|\bgte\b|"
+                      r"golf\s*(?:7|8|vii|viii)\b|\bmk\s*[78]\b|variant"),
         "gen_sure": RX(r"golf\s*(?:6|vi)\b|\bmk\s*6\b|edition\s*35|\b155\s*kw\b|\b211\s*(?:pk|ch|hp)\b|\b5k\b"),
         "gen_wrong": RX(r"golf\s*(?:7|vii|8|viii)\b|\bmk\s*[78]\b|\b(?:162|169)\s*kw\b|\b(?:220|230|245)\s*(?:pk|ch|hp)\b"),
     },
     "golf5gti": {
         "label": "VW Golf 5 GTI", "family": "golf", "petrol_only": True,
         "is_model": RX(r"\bgolf\b.*\bgti\b|\bgti\b.*\bgolf\b"),
-        "exclude": RX(r"sportsvan|golf\s*plus|\bplus\b|cabrio|\bgtd\b|golf\s*(?:7|8|vii|viii)\b"),
+        "exclude": RX(r"gti[\s-]*(?:pakket|pack|look|style|uitvoering|line)|\b1\.[2-9]\s*(?:tsi|fsi|tdi|mpi|i)?\b|golf\s*(?:4|iv)\b|\bmk\s*4\b|sportsvan|golf\s*plus|\bplus\b|cabrio|\bgtd\b|"
+                      r"golf\s*(?:7|8|vii|viii)\b"),
         "gen_sure": RX(r"golf\s*(?:5|v)\b|\bmk\s*5\b|\b1k\b|edition\s*30|pirelli"),
         "gen_wrong": RX(r"golf\s*(?:7|vii|8|viii)\b|\bmk\s*[78]\b"),
     },
@@ -908,7 +910,7 @@ def main():
         state = {"source_status": state.get("source_status", {})}
     state["search_id"] = sid
     first_run = not state.get("bootstrapped")
-    RULES_VERSION = 12
+    RULES_VERSION = 13
     if state.get("rules_version") != RULES_VERSION:
         state.pop("last_full_sweep", None)
         for c in db.values():
