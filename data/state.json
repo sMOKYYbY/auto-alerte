@@ -2,31 +2,31 @@
  "source_status": {
   "Marktplaats": {
    "fails": 0,
-   "last_count": 914,
-   "last_run": "2026-11-25T15:09:31+00:00",
+   "last_count": 913,
+   "last_run": "2026-11-25T15:15:31+00:00",
    "ok": true
   },
   "AutoScout24": {
    "fails": 0,
    "last_count": 109,
-   "last_run": "2026-11-25T15:09:31+00:00",
+   "last_run": "2026-11-25T15:15:31+00:00",
    "ok": true
   },
   "2dehands": {
    "fails": 0,
    "last_count": 439,
-   "last_run": "2026-11-25T15:09:31+00:00",
+   "last_run": "2026-11-25T15:15:31+00:00",
    "ok": true
   },
   "AutoScout24.be": {
    "fails": 0,
    "last_count": 57,
-   "last_run": "2026-11-25T15:09:31+00:00",
+   "last_run": "2026-11-25T15:15:31+00:00",
    "ok": true
   }
  },
  "search_id": "golf6-golf5gti-polo6",
- "rules_version": 12,
+ "rules_version": 13,
  "bootstrapped": true,
  "notified": [
   "2d:m2382421999",
@@ -144,7 +144,7 @@
   "mp:m2469487385",
   "mp:m2469489808"
  ],
- "last_run": "2026-11-25T15:09:31+00:00",
+ "last_run": "2026-11-25T15:15:31+00:00",
  "sources_bootstrapped": [
   "Marktplaats",
   "AutoScout24",
@@ -160,5 +160,5 @@
   "gti7",
   "polo6"
  ],
- "last_full_sweep": "2026-11-25T15:09:31+00:00"
+ "last_full_sweep": "2026-11-25T15:15:31+00:00"
 }
