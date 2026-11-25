@@ -2,26 +2,26 @@
  "source_status": {
   "Marktplaats": {
    "fails": 0,
-   "last_count": 3143,
-   "last_run": "2026-11-25T04:35:53+00:00",
+   "last_count": 2544,
+   "last_run": "2026-11-25T14:57:05+00:00",
    "ok": true
   },
   "AutoScout24": {
    "fails": 0,
-   "last_count": 1106,
-   "last_run": "2026-11-25T04:35:53+00:00",
+   "last_count": 1108,
+   "last_run": "2026-11-25T14:57:05+00:00",
    "ok": true
   },
   "2dehands": {
    "fails": 0,
-   "last_count": 1391,
-   "last_run": "2026-11-25T04:35:53+00:00",
+   "last_count": 1381,
+   "last_run": "2026-11-25T14:57:05+00:00",
    "ok": true
   },
   "AutoScout24.be": {
    "fails": 0,
-   "last_count": 474,
-   "last_run": "2026-11-25T04:35:53+00:00",
+   "last_count": 475,
+   "last_run": "2026-11-25T14:57:05+00:00",
    "ok": true
   }
  },
@@ -58,6 +58,7 @@
   "2d:m2469007382",
   "2d:m2469348672",
   "2d:m2469455835",
+  "2d:m2469795809",
   "as:2ff91322-4251-4ea4-9348-174a2c527d9a",
   "as:5c99ee59-8847-4f6a-ac6b-cb5404c55b2b",
   "as:7791735e-f6b0-45d5-9a9e-1c9f1c4da023",
@@ -109,7 +110,7 @@
   "mp:m2469291608",
   "mp:m2469489808"
  ],
- "last_run": "2026-11-25T04:35:53+00:00",
+ "last_run": "2026-11-25T14:57:05+00:00",
  "sources_bootstrapped": [
   "Marktplaats",
   "AutoScout24",
@@ -124,5 +125,5 @@
   "golf5gti",
   "polo6"
  ],
- "last_full_sweep": "2026-11-25T04:35:53+00:00"
+ "last_full_sweep": "2026-11-25T14:57:05+00:00"
 }
