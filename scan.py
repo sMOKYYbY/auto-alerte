@@ -230,6 +230,14 @@ MODELS = {
         "gen_sure": RX(r"golf\s*(?:6|vi)\b|\bmk\s*6\b|\b1k\b|\b5k\b"),
         "gen_wrong": RX(r"golf\s*(?:7|vii|8|viii)\b|\bmk\s*[78]\b"),
     },
+    "golf6gti": {
+        "label": "VW Golf 6 GTI", "family": "golf", "petrol_only": True,
+        "is_model": RX(r"\bgolf\b.*\bgti\b|\bgti\b.*\bgolf\b"),
+        "exclude": RX(r"sportsvan|golf\s*plus|\bplus\b|cabrio|\bgtd\b|\bgte\b|golf\s*(?:7|8|vii|viii)\b|\bmk\s*[78]\b|"
+                      r"variant"),
+        "gen_sure": RX(r"golf\s*(?:6|vi)\b|\bmk\s*6\b|edition\s*35|\b155\s*kw\b|\b211\s*(?:pk|ch|hp)\b|\b5k\b"),
+        "gen_wrong": RX(r"golf\s*(?:7|vii|8|viii)\b|\bmk\s*[78]\b|\b(?:162|169)\s*kw\b|\b(?:220|230|245)\s*(?:pk|ch|hp)\b"),
+    },
     "golf5gti": {
         "label": "VW Golf 5 GTI", "family": "golf", "petrol_only": True,
         "is_model": RX(r"\bgolf\b.*\bgti\b|\bgti\b.*\bgolf\b"),
@@ -254,6 +262,7 @@ DEFAULT_PROFILES = {
     "gti7":     {"years": [2017, 2020], "max_km": 160000, "budget": 22000, "vat_required": True},
     "a3":       {"years": [2017, 2020], "max_km": 160000, "budget": 19000, "vat_required": True},
     "golf6":    {"years": [2008, 2013], "max_km": 200000, "budget": 9000, "vat_required": False},
+    "golf6gti": {"years": [2009, 2013], "max_km": 200000, "budget": 11000, "vat_required": False, "roof_required": False},
     "golf5gti": {"years": [2004, 2009], "max_km": 200000, "budget": 9000, "vat_required": False},
     "polo6":    {"years": [2017, 2025], "max_km": 200000, "budget": 9000, "vat_required": False, "roof_required": False},
 }
@@ -265,17 +274,30 @@ def profile(model):
     return p
 
 
+def active_models():
+    """Modèles recherchés. Si config.json → "models" est rempli, seuls ceux qui y figurent (et pas "active": false)."""
+    conf = CONFIG.get("models") or {}
+    keys = [k for k in MODELS if k in conf] if conf else list(MODELS)
+    return [k for k in keys if profile(k).get("active", True)]
+
+
+def active_families():
+    return sorted({MODELS[k]["family"] for k in active_models()})
+
+
 def years_for(model):
     return profile(model)["years"]
 
 
 def family_years(family):
-    ys = [years_for(k) for k, m in MODELS.items() if m["family"] == family]
+    ys = [years_for(k) for k in active_models() if MODELS[k]["family"] == family] or \
+         [years_for(k) for k, m in MODELS.items() if m["family"] == family]
     return min(y[0] for y in ys), max(y[1] for y in ys)
 
 
 def family_max_km(family=None):
-    return max(profile(k)["max_km"] for k, m in MODELS.items() if family in (None, m["family"]))
+    ks = [k for k in active_models() if family in (None, MODELS[k]["family"])] or list(MODELS)
+    return max(profile(k)["max_km"] for k in ks)
 
 
 def model_budget(model):
@@ -284,7 +306,8 @@ def model_budget(model):
 
 def search_budget_incl(family=None):
     """Plafond TTC envoyé aux sites pour une famille : budget HT le plus haut, TVA comprise, + 2 %."""
-    tops = [profile(k)["budget"] for k, m in MODELS.items() if family in (None, m["family"])]
+    tops = [profile(k)["budget"] for k in active_models() if family in (None, MODELS[k]["family"])] or \
+           [profile(k)["budget"] for k in MODELS]
     return int(max(tops) * (1 + CONFIG["vat_rate"]) * 1.02)
 
 
@@ -310,6 +333,8 @@ def classify(c):
     golf6_hint = bool(MODELS["golf6"]["gen_sure"].search(blob)) and not re.search(r"golf\s*(?:5|v)\b|\bmk\s*5\b", blob, re.I)
     if is_gti and (year <= 2008 or (year == 2009 and not golf6_hint)):
         return "golf5gti"
+    if is_gti:
+        return "golf6gti"
     if year >= 2009 or (year == 2008 and golf6_hint):
         return "golf6"
     return "golf5"          # Golf 5 non GTI : pas recherchée
@@ -346,6 +371,9 @@ def evaluate(c: dict) -> dict:
         c.update(status="rejete", reasons=["Golf 5 non GTI" if model == "golf5" else "modèle"], checks={},
                  warnings=[], price_ht=None, cost=None)
         return c
+    if model not in active_models():
+        c.update(status="rejete", reasons=["recherche arrêtée"], checks={}, warnings=[], price_ht=None, cost=None)
+        return c
     m = MODELS[model]
     prof = profile(model)
 
@@ -377,7 +405,8 @@ def evaluate(c: dict) -> dict:
         reasons.append(f"année {year}")
     else:
         gen_ok = bool(m["gen_sure"].search(blob))
-        edge = {"golf6": year in (2008, 2012, 2013), "golf5gti": year == 2009, "polo6": year == 2017,
+        edge = {"golf6": year in (2008, 2012, 2013), "golf6gti": year in (2009, 2013), "golf5gti": year == 2009,
+                "polo6": year == 2017,
                 "golf7": year in (2017, 2020), "gti7": year in (2017, 2020), "a3": year == 2020}[model]
         if edge and not gen_ok:
             warn.append("vérifier génération")
@@ -534,7 +563,7 @@ def mp_parse(raw, model, site="Marktplaats"):
 def mp_search(pages, site="Marktplaats"):
     S = MP_SITES[site]
     results, ok = [], True
-    for model, query, l2 in MP_QUERIES:
+    for model, query, l2 in [q for q in MP_QUERIES if q[0] in active_families()]:
         for page in range(pages):
             r = get(f"https://{S['host']}/lrp/api/search", params=mp_params(query, l2, page * 100, years=family_years(model), family=model),
                     headers={"Accept": "application/json, text/plain, */*",
@@ -665,7 +694,7 @@ def as_parse(node, model, site="AutoScout24"):
 def as_search(pages, site="AutoScout24"):
     S = AS_SITES[site]
     results, ok = [], True
-    for model, path in AS_QUERIES:
+    for model, path in [q for q in AS_QUERIES if q[0] in active_families()]:
         for page in range(1, pages + 1):
             r = get(S["base"] + S["lst"] + path, params=as_params(page, years=family_years(model), cy=S["cy"], family=model),
                     headers={"Accept": "text/html"})
@@ -879,7 +908,7 @@ def main():
         state = {"source_status": state.get("source_status", {})}
     state["search_id"] = sid
     first_run = not state.get("bootstrapped")
-    RULES_VERSION = 11
+    RULES_VERSION = 12
     if state.get("rules_version") != RULES_VERSION:
         state.pop("last_full_sweep", None)
         for c in db.values():
@@ -942,7 +971,7 @@ def main():
     # Modèles ajoutés après le démarrage : même principe
     if "models_bootstrapped" not in state:
         state["models_bootstrapped"] = ["golf6", "golf5gti", "polo6"] if state.get("bootstrapped") else []
-    new_models = [k for k in MODELS if k not in state["models_bootstrapped"]] if not first_run else []
+    new_models = [k for k in active_models() if k not in state["models_bootstrapped"]] if not first_run else []
     budget = 450 if (first_run or new_sources or new_models) else CONFIG["max_details_per_run"]
     queue = []
     for c in db.values():
@@ -953,7 +982,7 @@ def main():
             c["detail_done"] = False
         evaluate(c)
         hard = [r for r in c["reasons"] if r.startswith(("année", "autre version", "Variant", "modèle"))
-                or "km" in r or r.startswith(("budget", "diesel", "Golf 5"))
+                or "km" in r or r.startswith(("budget", "diesel", "Golf 5", "recherche arrêtée"))
                 or (r == "pas automatique" and c.get("transmission"))]
         if not c["detail_done"] and not hard:
             queue.append(c)
@@ -1051,7 +1080,7 @@ def main():
                              f"{sum(c.get('status') == 'a_verifier' for c in mine)} à vérifier")
             whatsapp("🔁 Recherches ajoutées :\n" + "\n".join(parts) +
                      f"\nElles sont dans le tableau ; les nouvelles t'arriveront ici.\n{CONFIG.get('dashboard_url') or ''}", dry)
-            state["models_bootstrapped"] = list(MODELS)
+            state["models_bootstrapped"] = sorted(set(state["models_bootstrapped"]) | set(new_models))
     if first_run:
         state["sources_bootstrapped"] = all_sources
         state["models_bootstrapped"] = list(MODELS)

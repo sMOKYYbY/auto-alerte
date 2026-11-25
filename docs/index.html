@@ -170,8 +170,8 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const safeUrl = u => /^https:\/\//.test(u || '') ? esc(u) : '#';
 const n = v => v == null ? '?' : Number(v).toLocaleString('fr-BE');
-const NAMES = {golf7:'Golf 7.5 R-Line', gti7:'Golf 7.5 GTI', a3:'Audi A3 S line', golf6:'Golf 6', golf5gti:'Golf 5 GTI', polo6:'Polo 6'};
-const ORDER = ['golf7','gti7','a3','golf6','golf5gti','polo6'];
+const NAMES = {golf6gti:'Golf 6 GTI', golf5gti:'Golf 5 GTI', golf7:'Golf 7.5 R-Line', gti7:'Golf 7.5 GTI', a3:'Audi A3 S line', golf6:'Golf 6', polo6:'Polo 6'};
+const ORDER = ['golf6gti','golf5gti','golf7','gti7','a3','golf6','polo6'];
 const PAGE = 40;
 let DATA = [], CONF = {}, st = {model:'', status:'ok', sort:'new', shown:PAGE};
 
@@ -255,7 +255,7 @@ function renderModels(){
   const live = DATA.filter(c => !c.gone && (c.status === 'match' || c.status === 'a_verifier'));
   const cnt = m => live.filter(c => !m || c.model === m).length;
   const btn = (m, label) => `<button data-v="${m}" aria-pressed="${st.model === m}">${label}<small>${cnt(m)}</small></button>`;
-  $('#models').innerHTML = btn('', 'Tous') + ORDER.filter(m => DATA.some(c => c.model === m)).map(m => btn(m, NAMES[m])).join('');
+  $('#models').innerHTML = btn('', 'Tous') + ORDER.filter(m => (CONF.models && Object.keys(CONF.models).length) ? m in CONF.models : DATA.some(c => c.model === m)).map(m => btn(m, NAMES[m])).join('');
   $('#models').querySelectorAll('button').forEach(b => b.onclick = () => { st.model = b.dataset.v; st.shown = PAGE; renderModels(); render(); });
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {

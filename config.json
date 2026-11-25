@@ -3,41 +3,15 @@
   "search_id": "golf6-golf5gti-polo6",
   "vat_rate": 0.21,
   "models": {
-    "golf7": {
+    "golf6gti": {
       "years": [
-        2017,
-        2020
-      ],
-      "max_km": 160000,
-      "budget": 19000,
-      "vat_required": true
-    },
-    "gti7": {
-      "years": [
-        2017,
-        2020
-      ],
-      "max_km": 160000,
-      "budget": 22000,
-      "vat_required": true
-    },
-    "a3": {
-      "years": [
-        2017,
-        2020
-      ],
-      "max_km": 160000,
-      "budget": 19000,
-      "vat_required": true
-    },
-    "golf6": {
-      "years": [
-        2008,
+        2009,
         2013
       ],
       "max_km": 200000,
-      "budget": 9000,
-      "vat_required": false
+      "budget": 11000,
+      "vat_required": false,
+      "roof_required": false
     },
     "golf5gti": {
       "years": [
@@ -45,21 +19,12 @@
         2009
       ],
       "max_km": 200000,
-      "budget": 9000,
-      "vat_required": false
-    },
-    "polo6": {
-      "years": [
-        2017,
-        2025
-      ],
-      "max_km": 200000,
-      "budget": 9000,
+      "budget": 11000,
       "vat_required": false,
       "roof_required": false
     }
   },
-  "_models_aide": "budget = prix HT max si vat_required (TVA récupérable obligatoire), sinon coût max (HT si TVA récupérable, sinon prix affiché) ; roof_required false = toit ouvrant pas obligatoire",
+  "_models_aide": "Seuls les modèles listés ici sont recherchés. Modèles possibles : golf6gti, golf5gti, golf6, golf7, gti7, a3, polo6. budget = coût max (HT si TVA récupérable, sinon prix affiché) ; vat_required true = TVA récupérable obligatoire ; roof_required false = toit ouvrant pas obligatoire",
   "interior_probable_ok": true,
   "notify_statuses": [
     "match",

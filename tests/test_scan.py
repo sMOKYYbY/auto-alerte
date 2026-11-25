@@ -6,6 +6,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import scan  # noqa: E402
 
+# Les tests de règles portent sur tous les modèles avec leurs réglages par défaut ;
+# la configuration réelle (config.json) est testée à part, en bas du fichier.
+REAL_MODELS = scan.CONFIG.get("models") or {}
+scan.CONFIG["models"] = {}
+
 
 def base(**kw):
     c = {"uid": "t:1", "source": "Test", "id": "1", "url": "https://x", "price": 8500,
@@ -70,7 +75,7 @@ def test_golf5_gti():
     assert c["status"] == "rejete" and c["reasons"] == ["Golf 5 non GTI"]
     # GTI 2010 = Golf 6 GTI (essence) : acceptée comme Golf 6
     c = scan.evaluate(base(title="Volkswagen Golf 2.0 GTI DSG schuifdak", year=2010, text="Marge"))
-    assert c["model"] == "golf6" and c["status"] == "match"
+    assert c["model"] == "golf6gti" and c["status"] == "match"
 
 
 # --- Polo 6 -------------------------------------------------------------------
@@ -389,3 +394,41 @@ def test_key_snippets_keep_what_rules_need():
     c = scan.evaluate(base(title="Volkswagen Golf 1.5 TSI R-Line", year=2018, km=90000, price=17000, text=k))
     assert c["checks"]["toit"] == "oui" and c["checks"]["auto"] == "oui" and c["checks"]["tva"] == "marge"
     assert c["checks"]["interieur"] == "confirmé"
+
+
+# --- Configuration réelle : Golf 6 GTI + Golf 5 GTI seulement -------------------------
+def with_real_config(fn):
+    def wrapper(*a, **k):
+        old = scan.CONFIG["models"]
+        scan.CONFIG["models"] = REAL_MODELS
+        try:
+            return fn(*a, **k)
+        finally:
+            scan.CONFIG["models"] = old
+    wrapper.__name__ = fn.__name__
+    return wrapper
+
+
+@with_real_config
+def test_real_config_only_gti_searched():
+    assert set(scan.active_models()) == {"golf6gti", "golf5gti"}
+    assert scan.active_families() == ["golf"]
+    assert scan.search_budget_incl("golf") == int(11000 * 1.21 * 1.02)
+    assert scan.family_years("golf") == (2004, 2013)
+
+
+@with_real_config
+def test_real_config_golf6_gti_rules():
+    c = scan.evaluate(base(title="Volkswagen Golf 2.0 GTI 155kW DSG 2010 Grijs", year=2010, price=9000,
+                           km=158513, seller_type="particulier", text="DSG"))
+    assert c["model"] == "golf6gti" and c["status"] == "match" and c["checks"]["toit"] == "non", c
+    assert scan.evaluate(base(title="Volkswagen Golf 2.0 GTI DSG", year=2011, price=11500,
+                              text="BTW/marge: Marge, DSG"))["status"] == "rejete"   # budget 11 000 €
+    assert scan.evaluate(base(title="Volkswagen Golf 2.0 GTI", year=2011, price=8000,
+                              transmission="Handgeschakeld", text="Marge"))["status"] == "rejete"
+    assert scan.evaluate(base(title="Volkswagen Golf 1.4 TSI Highline DSG schuifdak", year=2011,
+                              text="Marge"))["reasons"] == ["recherche arrêtée"]
+    assert scan.evaluate(base(family="polo", title="Volkswagen Polo 1.0 TSI DSG", year=2019,
+                              text="Marge"))["reasons"] == ["recherche arrêtée"]
+    c5 = scan.evaluate(base(title="Volkswagen Golf 2.0 TFSI GTI DSG", year=2007, price=7500, text="Marge"))
+    assert c5["model"] == "golf5gti" and c5["status"] == "match"
