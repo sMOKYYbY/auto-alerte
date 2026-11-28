@@ -2,26 +2,26 @@
  "source_status": {
   "Marktplaats": {
    "fails": 0,
-   "last_count": 904,
-   "last_run": "2026-11-28T08:26:18+00:00",
+   "last_count": 883,
+   "last_run": "2026-11-28T17:02:13+00:00",
    "ok": true
   },
   "AutoScout24": {
    "fails": 0,
-   "last_count": 115,
-   "last_run": "2026-11-28T08:26:18+00:00",
+   "last_count": 111,
+   "last_run": "2026-11-28T17:02:13+00:00",
    "ok": true
   },
   "2dehands": {
    "fails": 0,
-   "last_count": 445,
-   "last_run": "2026-11-28T08:26:18+00:00",
+   "last_count": 444,
+   "last_run": "2026-11-28T17:02:13+00:00",
    "ok": true
   },
   "AutoScout24.be": {
    "fails": 0,
    "last_count": 54,
-   "last_run": "2026-11-28T08:26:18+00:00",
+   "last_run": "2026-11-28T17:02:13+00:00",
    "ok": true
   }
  },
@@ -62,6 +62,7 @@
   "2d:m2469455835",
   "2d:m2469747471",
   "2d:m2469795809",
+  "2d:m2471162776",
   "as:00afbbc9-8798-4d67-8e71-abbf4c943fe9",
   "as:1f02a4db-9ad8-4e86-afb5-de24dc6d975c",
   "as:2ff91322-4251-4ea4-9348-174a2c527d9a",
@@ -145,7 +146,7 @@
   "mp:m2469489808",
   "mp:m2470387858"
  ],
- "last_run": "2026-11-28T08:26:18+00:00",
+ "last_run": "2026-11-28T17:02:13+00:00",
  "sources_bootstrapped": [
   "Marktplaats",
   "AutoScout24",
@@ -161,5 +162,5 @@
   "gti7",
   "polo6"
  ],
- "last_full_sweep": "2026-11-28T08:26:18+00:00"
+ "last_full_sweep": "2026-11-28T17:02:13+00:00"
 }
